@@ -1,4 +1,3 @@
-# currently not using this docker image for jenkins master but just the base image jenkins/jenkins
 FROM jenkins/jenkins
 USER root
 RUN apt-get update && apt-get install -y apt-transport-https \
