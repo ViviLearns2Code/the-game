@@ -288,7 +288,7 @@ Rainy day scenario (Bob has 11 on his hand)
     "triggered_by": "alice",
     "success": false,
     "details": {
-      "discarded": [["bob", 11]]
+      "discarded": [["bob", 11]],
       "dead": false
     }
   }
