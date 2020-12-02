@@ -3,7 +3,7 @@ The stream of information between client and server is bidirectional. The commun
 ## Create Game
 Bob creates a game
 ```json
-// request
+// push to server from bob
 {
   "action": "create",
   "player_name": "bob"
@@ -18,7 +18,7 @@ Bob creates a game
 ## Join Game
 Alice joins the game Bob created
 ```json
-// request
+// push to server from alice
 {
   "action": "join",
   "game_id": "1",
@@ -41,18 +41,17 @@ Alice joins the game Bob created
 ### Request Concentration & Player Readiness
 * Bob requests concentration
 ```json
-// request from bob
+// push to server from bob
 {
   "action": "concentrate",
-  "card": 0,
   "game_id": "1",
   "player_id": "1",
   "player_name": "bob"
 }
 ```
-* The server pushes responses to both players
+* Server pushes to both players
 ```json
-// response for bob
+// push to bob from server
 {
   "game_id": "1",
   "player_id": "1",
@@ -70,10 +69,10 @@ Alice joins the game Bob created
   "event": {
     "type": "concentrate",
     "triggered_by": "bob",
-    "not_ready": ["alice"],
+    "not_ready": ["bob", "alice"],
   }
 }
-// response for alice
+// push to alice from server
 {
   "game_id": "1",
   "player_id": "2",
@@ -91,23 +90,23 @@ Alice joins the game Bob created
   "event": {
     "type": "concentrate",
     "triggered_by": "bob",
-    "not_ready": ["alice"],
+    "not_ready": ["bob", "alice"],
   }
 }
 ```
 * Alice notifies the server that she is ready
 ```json
-// request from alice
+// push to server from alice
 {
   "action": "ready",
-  "card": 0,
   "game_id": "1",
   "player_id": "2",
   "player_name": "alice"
 }
 ```
+* Server pushes to both players
 ```json
-// response for bob
+// push to bob from server
 {
   "game_id": "1",
   "player_id": "1",
@@ -125,10 +124,10 @@ Alice joins the game Bob created
   "event": {
     "type": "ready",
     "triggered_by": "alice",
-    "not_ready": [],
+    "not_ready": ["bob"],
   }
 }
-// response for alice
+// push to alice from server
 {
   "game_id": "1",
   "player_id": "2",
@@ -146,36 +145,97 @@ Alice joins the game Bob created
   "event": {
     "type": "ready",
     "triggered_by": "alice",
-    "not_ready": [],
+    "not_ready": ["bob"],
   }
 }
 ```
-* For propose, agree, reject the process is similar but with different event objects.
-
+### Request & Use Star
+* Bob requests a star
 ```json
+// push to server from bob
 {
+  "action": "propose-star",
+  "game_id": "1",
+  "player_id": "1",
+  "player_name": "bob"
+}
+```
+* Server pushes to both players, below is the example for Bob
+```json
+// push to bob from server
+{
+  "game_id": "1",
+  "player_id": "1",
+  "game_state": {
+    "hand": [20,43,61,62,68,90,100],
+    "players_card_count": [{
+      "bob": 7,
+      "alice": 4
+    }],
+    "top_card": 10,
+    "level": 1,
+    "lives": 3,
+    "stars": 1,
+  },
   "event": {
     "type": "propose-star",
     "triggered_by": "bob",
     "pro_star": ["bob"],
-    "con_star": []
+    "con_star": [],
+    "discarded": []
+  }
+}
+```
+* Alice agrees
+```json
+// push to server from alice
+{
+  "action": "agree-star",
+  "game_id": "1",
+  "player_id": "2",
+  "player_name": "alice"
+}
+```
+* Server pushes to both players, below is the example for Bob
+```json
+// push to bob from server
+{
+  "game_id": "1",
+  "player_id": "1",
+  "game_state": {
+    "hand": [20,43,61,62,68,90,100],
+    "players_card_count": [{
+      "bob": 7,
+      "alice": 4
+    }],
+    "top_card": 10,
+    "level": 1,
+    "lives": 3,
+    "stars": 1,
+  },
+  "event": {
+    "type": "agree-star",
+    "triggered_by": "alice",
+    "pro_star": ["bob", "alice"],
+    "con_star": [],
+    "discarded": [["bob", 20], ["alice", 12]]
   }
 }
 ```
 ## Play Card
 * Alice plays a card
 ```json
-// request
+// push to server from alice
 {
-  "action": "play-card",
   "card": 12,
   "game_id": "1",
   "player_id": "2",
+  "player_name": "alice"
 }
 ```
 * Sunny day scenario: The card was placed in the correct order
 ```json
-// response
+// push to alice from server
 {
   "game_id": "1",
   "player_id": "2",
@@ -203,21 +263,21 @@ Alice joins the game Bob created
   }
 }
 ```
-Rainy day scenario (bob has 11 on his hand)
+Rainy day scenario (Bob has 11 on his hand)
 ```json
-// response
+// push to alice from server
 {
   "game_id": "1",
   "player_id": "2",
   "game_state": {
-    "hand": ??,
+    "hand": [35,40,99],
     "players_card_count": [{
-      "bob": ??,
-      "alice": ??
+      "bob": 6,
+      "alice": 3
     }],
-    "top_card": ??,
+    "top_card": 12,
     "level": 1,
-    "lives": ??,
+    "lives": 2,
     "stars": 1,
     "not_ready": [],
     "pro_star": [],
@@ -228,7 +288,8 @@ Rainy day scenario (bob has 11 on his hand)
     "triggered_by": "alice",
     "success": false,
     "details": {
-      ??
+      "discarded": [["bob", 11]]
+      "dead": false
     }
   }
 }
