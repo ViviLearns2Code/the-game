@@ -196,7 +196,7 @@ Alice joins the game Bob created
     "success": true,
     "details": {
       "level_up": false,
-      "new_skill": "telepathy",
+      "new_skill": "",
       "stars_increase": 0,
       "lives_increase": 0
     }
