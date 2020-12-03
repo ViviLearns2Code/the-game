@@ -38,6 +38,21 @@ const richText = new PIXI.Text('Rich text with a lot of options and across multi
 richText.x = 50;
 richText.y = 220;
 
+// Opt-in to interactivity
+richText.interactive = true;
+// Shows hand cursor
+richText.buttonMode = true;
+// Pointers normalize touch and mouse
+richText.on('pointerdown', onClick);
+// Alternatively, use the mouse & touch events:
+// sprite.on('click', onClick); // mouse-only
+// sprite.on('tap', onClick); // touch-only
+function onClick() {
+    richText.scale.x *= 1.25;
+    richText.scale.y *= 1.25;
+}
+
+
 app.stage.addChild(richText);
 
 const skewStyle = new PIXI.TextStyle({
@@ -63,6 +78,21 @@ skewText.x = 300;
 skewText.y = 480;
 
 app.stage.addChild(skewText);
+
+skewText.interactive = true;
+// Shows hand cursor
+skewText.buttonMode = true;
+// Pointers normalize touch and mouse
+skewText.on('pointerdown', onClick2);
+// Alternatively, use the mouse & touch events:
+// sprite.on('click', onClick); // mouse-only
+// sprite.on('tap', onClick); // touch-only
+function onClick2() {
+    richText.scale.x /= 1.25;
+    richText.scale.y /= 1.25;
+}
+
+
 
     </script>
   </body>
