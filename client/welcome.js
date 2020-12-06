@@ -8,21 +8,41 @@ class WelcomeUI extends PIXI.Container {
     titleText.x = 50;
     titleText.y = 100;
 
-    const joinButton = new PIXI.Text('Host New Game');
-    this.addChild(joinButton);
-    joinButton.x = 50;
-    joinButton.y = 200;
+    var inputName = new PIXI.TextInput({
+      input: {fontSize: '25px'},
+      box: {fill: 0xEEEEEE}
+    })
+    inputName.x = 50
+    inputName.y = 300
+    inputName.placeholder = 'Player name...'
+    this.addChild(inputName)
+    inputName.focus()
 
-    joinButton.interactive = true;
-    joinButton.buttonMode = true;
-    joinButton.on('pointerdown', onJoinButtonClick);
-    function onJoinButtonClick() {
+    const hostButton = new PIXI.Text('Host New Game');
+    this.addChild(hostButton);
+    hostButton.x = 50;
+    hostButton.y = 200;
 
+    hostButton.interactive = true;
+    hostButton.buttonMode = true;
+    hostButton.on('pointerdown', onHostButtonClick);
+    function onHostButtonClick() {
+      if (inputName.value == "")
+        return;
+      websocket.send(JSON.stringify(
+        {
+          "action": "create",
+          "player_name": inputName.value
+        }
+      ));
     }
   }
 
   parseGameState(gameState) {
-    this.visible = gameState.state == "welcome";
+
+    this.visible = !("gameState" in gameState);
+
+    //this.visible = gameState.state == "welcome";
     if (!this.visible)
       return
 

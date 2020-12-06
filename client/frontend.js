@@ -1,3 +1,7 @@
+var websocket = new WebSocket("ws://www.example.com/socketserver");
+gameId = -1
+playerId = -1
+playerName = ""
 
 const app = new PIXI.Application({ backgroundColor: 0x1099bb });
 document.body.appendChild(app.view);
@@ -19,6 +23,22 @@ function parseGameStateGlobal(gameStateJSON) {
   welcomeContainer.parseGameState(gameState);
   lobbyContainer.parseGameState(gameState);
   gameContainer.parseGameState(gameState);
+  testContainer.parseGameState(gameState);
+}
+
+websocket.onmessage = function (event) {
+  console.log(event.data);
+
+  var gameState = JSON.parse(event.data); // TODO: Avoid duplicate JSON extraction
+
+  if ("gameState" in gameState)
+    parseGameStateGlobal(event.data);
+  else {
+    gameId = gameState.gameId;
+    playerId = gameState.playerId;
+    playerName = gameState.playerName;
+  }
+
 }
 
 parseGameStateGlobal('{"state" : "welcome"}');

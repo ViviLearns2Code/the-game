@@ -34,7 +34,7 @@ class LobbyUI extends PIXI.Container {
   }
 
   parseGameState(gameState) {
-    this.visible = gameState.state == "lobby";
+    this.visible = false;//gameState.state == "lobby";
     if (!this.visible)
       return
 
