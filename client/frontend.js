@@ -1,4 +1,4 @@
-var websocket = new WebSocket("ws://www.example.com/socketserver");
+var websocket = new WebSocket("wss://www.example.com/socketserver");
 gameId = -1
 playerId = -1
 playerName = ""
