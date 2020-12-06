@@ -6,13 +6,13 @@ Bob creates a game
 // push to server from bob
 {
   "action": "create",
-  "player_name": "bob"
+  "playerName": "bob"
 }
 // response
 {
-  "game_id": "1",
-  "player_id": "1",
-  "player_name": "bob"
+  "gameId": "1",
+  "playerId": "1",
+  "playerName": "bob"
 }
 ```
 ## Join Game
@@ -21,14 +21,14 @@ Alice joins the game Bob created
 // push to server from alice
 {
   "action": "join",
-  "game_id": "1",
-  "player_name": "alice"
+  "gameId": "1",
+  "playerName": "alice"
 }
 // response
 {
-  "game_id": "1",
-  "player_id": "2",
-  "player_name": "alice"
+  "gameId": "1",
+  "playerId": "2",
+  "playerName": "alice"
 }
 ```
 ## Simple Actions
@@ -44,53 +44,53 @@ Alice joins the game Bob created
 // push to server from bob
 {
   "action": "concentrate",
-  "game_id": "1",
-  "player_id": "1",
-  "player_name": "bob"
+  "gameId": "1",
+  "playerId": "1",
+  "playerName": "bob"
 }
 ```
 * Server pushes to both players
 ```json
 // push to bob from server
 {
-  "game_id": "1",
-  "player_id": "1",
-  "game_state": {
+  "gameId": "1",
+  "playerId": "1",
+  "gameState": {
     "hand": [20,43,61,62,68,90,100],
-    "players_card_count": [{
+    "playersCardCount": [{
       "bob": 7,
       "alice": 4
     }],
-    "top_card": 10,
+    "topCard": 10,
     "level": 1,
     "lives": 3,
     "stars": 1,
   },
   "event": {
     "type": "concentrate",
-    "triggered_by": "bob",
-    "not_ready": ["bob", "alice"],
+    "triggeredBy": "bob",
+    "notReady": ["bob", "alice"],
   }
 }
 // push to alice from server
 {
-  "game_id": "1",
-  "player_id": "2",
-  "game_state": {
+  "gameId": "1",
+  "playerId": "2",
+  "gameState": {
     "hand": [12,35,40,99],
-    "players_card_count": [{
+    "playersCardCount": [{
       "bob": 7,
       "alice": 4
     }],
-    "top_card": 10,
+    "topCard": 10,
     "level": 1,
     "lives": 3,
     "stars": 1,
   },
   "event": {
     "type": "concentrate",
-    "triggered_by": "bob",
-    "not_ready": ["bob", "alice"],
+    "triggeredBy": "bob",
+    "notReady": ["bob", "alice"],
   }
 }
 ```
@@ -99,53 +99,53 @@ Alice joins the game Bob created
 // push to server from alice
 {
   "action": "ready",
-  "game_id": "1",
-  "player_id": "2",
-  "player_name": "alice"
+  "gameId": "1",
+  "playerId": "2",
+  "playerName": "alice"
 }
 ```
 * Server pushes to both players
 ```json
 // push to bob from server
 {
-  "game_id": "1",
-  "player_id": "1",
-  "game_state": {
+  "gameId": "1",
+  "playerId": "1",
+  "gameState": {
     "hand": [12,35,40,99],
-    "players_card_count": [{
+    "playersCardCount": [{
       "bob": 7,
       "alice": 4
     }],
-    "top_card": 10,
+    "topCard": 10,
     "level": 1,
     "lives": 3,
     "stars": 1
   },
   "event": {
     "type": "ready",
-    "triggered_by": "alice",
-    "not_ready": ["bob"],
+    "triggeredBy": "alice",
+    "notReady": ["bob"],
   }
 }
 // push to alice from server
 {
-  "game_id": "1",
-  "player_id": "2",
-  "game_state": {
+  "gameId": "1",
+  "playerId": "2",
+  "gameState": {
     "hand": [12,35,40,99],
-    "players_card_count": [{
+    "playersCardCount": [{
       "bob": 7,
       "alice": 4
     }],
-    "top_card": 10,
+    "topCard": 10,
     "level": 1,
     "lives": 3,
     "stars": 1
   },
   "event": {
     "type": "ready",
-    "triggered_by": "alice",
-    "not_ready": ["bob"],
+    "triggeredBy": "alice",
+    "notReady": ["bob"],
   }
 }
 ```
@@ -155,33 +155,33 @@ Alice joins the game Bob created
 // push to server from bob
 {
   "action": "propose-star",
-  "game_id": "1",
-  "player_id": "1",
-  "player_name": "bob"
+  "gameId": "1",
+  "playerId": "1",
+  "playerName": "bob"
 }
 ```
 * Server pushes to both players, below is the example for Bob
 ```json
 // push to bob from server
 {
-  "game_id": "1",
-  "player_id": "1",
-  "game_state": {
+  "gameId": "1",
+  "playerId": "1",
+  "gameState": {
     "hand": [20,43,61,62,68,90,100],
-    "players_card_count": [{
+    "playersCardCount": [{
       "bob": 7,
       "alice": 4
     }],
-    "top_card": 10,
+    "topCard": 10,
     "level": 1,
     "lives": 3,
     "stars": 1,
   },
   "event": {
     "type": "propose-star",
-    "triggered_by": "bob",
-    "pro_star": ["bob"],
-    "con_star": [],
+    "triggeredBy": "bob",
+    "proStar": ["bob"],
+    "conStar": [],
     "discarded": []
   }
 }
@@ -191,33 +191,33 @@ Alice joins the game Bob created
 // push to server from alice
 {
   "action": "agree-star",
-  "game_id": "1",
-  "player_id": "2",
-  "player_name": "alice"
+  "gameId": "1",
+  "playerId": "2",
+  "playerName": "alice"
 }
 ```
 * Server pushes to both players, below is the example for Bob
 ```json
 // push to bob from server
 {
-  "game_id": "1",
-  "player_id": "1",
-  "game_state": {
+  "gameId": "1",
+  "playerId": "1",
+  "gameState": {
     "hand": [20,43,61,62,68,90,100],
-    "players_card_count": [{
+    "playersCardCount": [{
       "bob": 7,
       "alice": 4
     }],
-    "top_card": 10,
+    "topCard": 10,
     "level": 1,
     "lives": 3,
     "stars": 1,
   },
   "event": {
     "type": "agree-star",
-    "triggered_by": "alice",
-    "pro_star": ["bob", "alice"],
-    "con_star": [],
+    "triggeredBy": "alice",
+    "proStar": ["bob", "alice"],
+    "conStar": [],
     "discarded": [["bob", 20], ["alice", 12]]
   }
 }
@@ -228,37 +228,37 @@ Alice joins the game Bob created
 // push to server from alice
 {
   "card": 12,
-  "game_id": "1",
-  "player_id": "2",
-  "player_name": "alice"
+  "gameId": "1",
+  "playerId": "2",
+  "playerName": "alice"
 }
 ```
 * Sunny day scenario: The card was placed in the correct order
 ```json
 // push to alice from server
 {
-  "game_id": "1",
-  "player_id": "2",
-  "game_state": {
+  "gameId": "1",
+  "playerId": "2",
+  "gameState": {
     "hand": [35,40,99],
-    "players_card_count": [{
+    "playersCardCount": [{
       "bob": 7,
       "alice": 3
     }],
-    "top_card": 12,
+    "topCard": 12,
     "level": 1,
     "lives": 3,
     "stars": 1
   },
   "event": {
-    "type": "placed_card",
-    "triggered_by": "alice",
+    "type": "placed-card",
+    "triggeredBy": "alice",
     "success": true,
     "details": {
-      "level_up": false,
-      "new_skill": "",
-      "stars_increase": 0,
-      "lives_increase": 0
+      "levelUp": false,
+      "newSkill": "",
+      "starsIncrease": 0,
+      "livesIncrease": 0
     }
   }
 }
@@ -267,25 +267,25 @@ Rainy day scenario (Bob has 11 on his hand)
 ```json
 // push to alice from server
 {
-  "game_id": "1",
-  "player_id": "2",
-  "game_state": {
+  "gameId": "1",
+  "playerId": "2",
+  "gameState": {
     "hand": [35,40,99],
-    "players_card_count": [{
+    "playersCardCount": [{
       "bob": 6,
       "alice": 3
     }],
-    "top_card": 12,
+    "topCard": 12,
     "level": 1,
     "lives": 2,
     "stars": 1,
-    "not_ready": [],
-    "pro_star": [],
-    "con_star": []
+    "notReady": [],
+    "proStar": [],
+    "conStar": []
   },
   "event": {
-    "type": "placed_card",
-    "triggered_by": "alice",
+    "type": "placed-card",
+    "triggeredBy": "alice",
     "success": false,
     "details": {
       "discarded": [["bob", 11]],
