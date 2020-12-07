@@ -92,6 +92,20 @@ type gameDetails struct {
 	raw        map[string]string
 }
 
+type GameOutput struct {
+	GameId     string `json:"gameId"`
+	PlayerName string `json:"playerName"`
+	PlayerHand []int  `json:"playerHand, omitempty"`
+}
+
+func convertGameStateToOutput(gameState GameState, playerName string) GameOutput {
+	var gameOutput = GameOutput{
+		GameId:     gameState.gameId,
+		PlayerName: playerName,
+		PlayerHand: []int{2, 6, 19, 56, 99},
+	}
+	return gameOutput
+}
 func isValidAction(actionId string) bool {
 	actions := [8]string{"create", "join", "concentrate", "ready", "propose-star", "agree-star", "reject-star", "card"}
 	for _, a := range actions {
@@ -213,7 +227,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				c.Close(websocket.StatusUnsupportedData, err.Error())
 			}
-			go listenPlayerChannel(c, ctx, myPlayerChannel)
+			go listenPlayerChannel(c, ctx, myPlayerName, myPlayerChannel)
 		case "join":
 			_myGame, ok := getGameFromMap(gameDetails.gameId)
 			myGame = _myGame
@@ -225,7 +239,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				c.Close(websocket.StatusUnsupportedData, err.Error())
 			}
-			go listenPlayerChannel(c, ctx, myPlayerChannel)
+			go listenPlayerChannel(c, ctx, myPlayerName, myPlayerChannel)
 		default:
 			if myPlayerName != gameDetails.playerName {
 				c.Close(websocket.StatusUnsupportedData, "PlayerName corrupted")
@@ -234,12 +248,13 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 		myGame.inputCh <- data
 	}
 }
-func listenPlayerChannel(c *websocket.Conn, ctx context.Context, myPlayerChannel chan GameState) {
+func listenPlayerChannel(c *websocket.Conn, ctx context.Context, playerName string, myPlayerChannel chan GameState) {
 	var err error
 	for {
 		gameState := <-myPlayerChannel
 		log.Printf("New game state received")
-		err = wsjson.Write(ctx, c, gameState)
+		output := convertGameStateToOutput(gameState, playerName)
+		err = wsjson.Write(ctx, c, output)
 		if err != nil {
 			log.Printf("Error in write")
 			break
