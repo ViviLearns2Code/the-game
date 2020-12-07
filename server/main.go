@@ -92,17 +92,34 @@ type gameDetails struct {
 	raw        map[string]string
 }
 
-type GameOutput struct {
-	GameId     string `json:"gameId"`
-	PlayerName string `json:"playerName"`
-	PlayerHand []int  `json:"playerHand, omitempty"`
+type GameStateOutput struct {
+	TopCard int   `json:"topCard, omitempty"`
+	Level   int   `json:"level, omitempty"`
+	Lives   int   `json:"lives, omitempty"`
+	Stars   int   `json:"stars, omitempty"`
+	Hand    []int `json:"hand, omitempty"`
 }
 
-func convertGameStateToOutput(gameState GameState, playerName string) GameOutput {
+type GameOutput struct {
+	GameId     string           `json:"gameId"`
+	PlayerId   string           `json:"playerId"`
+	PlayerName string           `json:"playerName"`
+	GameState  *GameStateOutput `json:"gameState, omitempty"`
+}
+
+func convertGameStateToOutput(gameState GameState, playerId string, playerName string) GameOutput {
+	var gameStateOutput = GameStateOutput{
+		TopCard: 12,
+		Level:   2,
+		Lives:   3,
+		Stars:   3,
+		Hand:    []int{20, 45, 88},
+	}
 	var gameOutput = GameOutput{
 		GameId:     gameState.gameId,
+		PlayerId:   playerId,
 		PlayerName: playerName,
-		PlayerHand: []int{2, 6, 19, 56, 99},
+		GameState:  &gameStateOutput,
 	}
 	return gameOutput
 }
@@ -201,7 +218,8 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 	var myPlayerName string
 	var myGame Game
 	var myPlayerChannel chan GameState
-
+	var failed = false
+	log.Printf("Entering loop...")
 	for {
 		var data = make(map[string]string)
 		var err = wsjson.Read(ctx, c, &data)
@@ -209,21 +227,26 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error reading json %e", err)
 		}
 		gameDetails := extractDetails(data)
+		log.Printf("Checking inputs")
 		if gameDetails.playerName == "" {
-			c.Close(websocket.StatusUnsupportedData, "Playername corrupted")
+			c.Close(websocket.StatusUnsupportedData, "playerName corrupted")
+			break
 		}
 		if gameDetails.playerId != myPlayerId {
-			c.Close(websocket.StatusUnsupportedData, "PlayerID corrupted")
+			c.Close(websocket.StatusUnsupportedData, "playerId corrupted")
+			break
 		}
 		if !isValidAction(gameDetails.actionId) {
-			c.Close(websocket.StatusUnsupportedData, "ActionID corrupted")
+			c.Close(websocket.StatusUnsupportedData, "actionId corrupted")
+			break
 		}
 		if gameDetails.gameId != myGame.id {
-			c.Close(websocket.StatusUnsupportedData, "GameID corrupted")
+			c.Close(websocket.StatusUnsupportedData, "gameId corrupted")
+			break
 		}
 		switch gameDetails.actionId {
 		case "create":
-			// create new game
+			log.Printf("Creating game...")
 			myPlayerName = gameDetails.playerName
 			myGame = *NewGame()
 			addGameToMap(myGame.id, myGame)
@@ -231,34 +254,52 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			myPlayerId, myPlayerChannel, err = myGame.Subscribe(myPlayerName)
 			if err != nil {
 				c.Close(websocket.StatusUnsupportedData, err.Error())
+				failed = true
+				break
 			}
-			go listenPlayerChannel(c, ctx, myPlayerName, myPlayerChannel)
+			go listenPlayerChannel(c, ctx, myPlayerId, myPlayerName, myPlayerChannel)
 		case "join":
+			log.Printf("Joining game...")
 			_myGame, ok := getGameFromMap(gameDetails.gameId)
 			myGame = _myGame
 			if !ok {
 				c.Close(websocket.StatusUnsupportedData, "GameID corrupted")
+				failed = true
+				break
 			}
 			myPlayerName = gameDetails.playerName
 			myPlayerId, myPlayerChannel, err = myGame.Subscribe(myPlayerName)
 			if err != nil {
 				c.Close(websocket.StatusUnsupportedData, err.Error())
+				failed = true
+				break
 			}
-			go listenPlayerChannel(c, ctx, myPlayerName, myPlayerChannel)
+			go listenPlayerChannel(c, ctx, myPlayerId, myPlayerName, myPlayerChannel)
 		default:
 			if myPlayerName != gameDetails.playerName {
 				c.Close(websocket.StatusUnsupportedData, "PlayerName corrupted")
+				failed = true
+				break
 			}
 		}
+		if failed {
+			break
+		}
+		log.Printf("playerId: %v", myPlayerId)
+		log.Printf("playerName: %v", myPlayerName)
+		log.Printf("gameId: %v", myGame.id)
+		log.Printf("actionId: %v", gameDetails.actionId)
+		log.Printf("Passing inputs to game core...")
 		myGame.inputCh <- data
 	}
 }
-func listenPlayerChannel(c *websocket.Conn, ctx context.Context, playerName string, myPlayerChannel chan GameState) {
+func listenPlayerChannel(c *websocket.Conn, ctx context.Context, playerId string, playerName string, myPlayerChannel chan GameState) {
 	var err error
+	log.Printf("Player channel opened...")
 	for {
 		gameState := <-myPlayerChannel
 		log.Printf("New game state received")
-		output := convertGameStateToOutput(gameState, playerName)
+		output := convertGameStateToOutput(gameState, playerId, playerName)
 		err = wsjson.Write(ctx, c, output)
 		if err != nil {
 			log.Printf("Error in write")
