@@ -116,7 +116,7 @@ func isValidAction(actionId string) bool {
 	return false
 }
 
-const listenAddr = "localhost:4000"
+const listenAddr = "192.168.178.23:4000" //localhost:4000
 
 func main() {
 	log.Printf("hello server")
@@ -131,7 +131,9 @@ func main() {
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("hello handler")
-	c, err := websocket.Accept(w, r, nil)
+	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		OriginPatterns: []string{"http://0.0.0.0"},
+	})
 	if err != nil {
 		log.Printf("error in accept")
 		return
@@ -182,9 +184,12 @@ func extractDetails(raw map[string]string) gameDetails {
 }
 func runGame(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Connection established...")
-	c, err := websocket.Accept(w, r, nil)
+	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		InsecureSkipVerify: false,
+		OriginPatterns:     []string{"0.0.0.0:8000"},
+	})
 	if err != nil {
-		log.Printf("error in accept")
+		log.Printf("error in accept %e", err)
 		return
 	}
 	defer c.Close(websocket.StatusInternalError, "internal error")
