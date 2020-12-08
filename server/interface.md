@@ -5,7 +5,7 @@ Bob creates a game
 ```json
 // push to server from bob
 {
-  "action": "create",
+  "actionId": "create",
   "playerName": "bob"
 }
 // response
@@ -20,7 +20,7 @@ Alice joins the game Bob created
 ```json
 // push to server from alice
 {
-  "action": "join",
+  "actionId": "join",
   "gameId": "1",
   "playerName": "alice"
 }
@@ -43,7 +43,7 @@ Alice joins the game Bob created
 ```json
 // push to server from bob
 {
-  "action": "concentrate",
+  "actionId": "concentrate",
   "gameId": "1",
   "playerId": "1",
   "playerName": "bob"
@@ -98,7 +98,7 @@ Alice joins the game Bob created
 ```json
 // push to server from alice
 {
-  "action": "ready",
+  "actionId": "ready",
   "gameId": "1",
   "playerId": "2",
   "playerName": "alice"
@@ -154,7 +154,7 @@ Alice joins the game Bob created
 ```json
 // push to server from bob
 {
-  "action": "propose-star",
+  "actionId": "propose-star",
   "gameId": "1",
   "playerId": "1",
   "playerName": "bob"
@@ -190,7 +190,7 @@ Alice joins the game Bob created
 ```json
 // push to server from alice
 {
-  "action": "agree-star",
+  "actionId": "agree-star",
   "gameId": "1",
   "playerId": "2",
   "playerName": "alice"
@@ -227,6 +227,7 @@ Alice joins the game Bob created
 ```json
 // push to server from alice
 {
+  "actionId": "card",
   "card": 12,
   "gameId": "1",
   "playerId": "2",

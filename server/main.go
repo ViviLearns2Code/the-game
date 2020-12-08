@@ -92,6 +92,37 @@ type gameDetails struct {
 	raw        map[string]string
 }
 
+type GameStateOutput struct {
+	TopCard int   `json:"topCard, omitempty"`
+	Level   int   `json:"level, omitempty"`
+	Lives   int   `json:"lives, omitempty"`
+	Stars   int   `json:"stars, omitempty"`
+	Hand    []int `json:"hand, omitempty"`
+}
+
+type GameOutput struct {
+	GameId     string           `json:"gameId"`
+	PlayerId   string           `json:"playerId"`
+	PlayerName string           `json:"playerName"`
+	GameState  *GameStateOutput `json:"gameState, omitempty"`
+}
+
+func convertGameStateToOutput(gameState GameState, playerId string, playerName string) GameOutput {
+	var gameStateOutput = GameStateOutput{
+		TopCard: 12,
+		Level:   2,
+		Lives:   3,
+		Stars:   3,
+		Hand:    []int{20, 45, 88},
+	}
+	var gameOutput = GameOutput{
+		GameId:     gameState.gameId,
+		PlayerId:   playerId,
+		PlayerName: playerName,
+		GameState:  &gameStateOutput,
+	}
+	return gameOutput
+}
 func isValidAction(actionId string) bool {
 	actions := [8]string{"create", "join", "concentrate", "ready", "propose-star", "agree-star", "reject-star", "card"}
 	for _, a := range actions {
@@ -102,7 +133,7 @@ func isValidAction(actionId string) bool {
 	return false
 }
 
-const listenAddr = "localhost:4000"
+const listenAddr = "192.168.178.23:4000" //localhost:4000
 
 func main() {
 	log.Printf("hello server")
@@ -115,9 +146,12 @@ func main() {
 	}
 }
 
+/*
 func wsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("hello handler")
-	c, err := websocket.Accept(w, r, nil)
+	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		OriginPatterns: []string{"http://0.0.0.0"},
+	})
 	if err != nil {
 		log.Printf("error in accept")
 		return
@@ -152,6 +186,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	c.Close(websocket.StatusNormalClosure, "")
 	return
 }
+*/
 func extractDetails(raw map[string]string) gameDetails {
 	var gameId, _ = raw["gameId"]
 	var playerId, _ = raw["playerId"]
@@ -168,9 +203,12 @@ func extractDetails(raw map[string]string) gameDetails {
 }
 func runGame(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Connection established...")
-	c, err := websocket.Accept(w, r, nil)
+	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		InsecureSkipVerify: false,
+		OriginPatterns:     []string{"0.0.0.0:8000"},
+	})
 	if err != nil {
-		log.Printf("error in accept")
+		log.Printf("error in accept %e", err)
 		return
 	}
 	defer c.Close(websocket.StatusInternalError, "internal error")
@@ -182,7 +220,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 	var myPlayerName string
 	var myGame Game
 	var myPlayerChannel chan GameState
-
+	log.Printf("Entering loop...")
 	for {
 		var data = make(map[string]string)
 		var err = wsjson.Read(ctx, c, &data)
@@ -190,63 +228,73 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error reading json %e", err)
 		}
 		gameDetails := extractDetails(data)
+		log.Printf("Checking inputs")
 		if gameDetails.playerName == "" {
-			c.Close(websocket.StatusUnsupportedData, "Playername corrupted")
-		}
-		if gameDetails.playerId != myPlayerId {
-			c.Close(websocket.StatusUnsupportedData, "PlayerID corrupted")
+			c.Close(websocket.StatusUnsupportedData, "playerName corrupted")
+			return
 		}
 		if !isValidAction(gameDetails.actionId) {
-			c.Close(websocket.StatusUnsupportedData, "ActionID corrupted")
-		}
-		if gameDetails.gameId != myGame.id {
-			c.Close(websocket.StatusUnsupportedData, "GameID corrupted")
+			c.Close(websocket.StatusUnsupportedData, "actionId corrupted")
+			return
 		}
 		switch gameDetails.actionId {
 		case "create":
-			// create new game
+			log.Printf("Creating game...")
 			myPlayerName = gameDetails.playerName
 			myGame = *NewGame()
 			addGameToMap(myGame.id, myGame)
 			go myGame.Start()
-			myPlayerId, myPlayerChannel, err = myGame.Subscribe(myPlayerName)
-			if err != nil {
-				c.Close(websocket.StatusUnsupportedData, err.Error())
-			}
-			go listenPlayerChannel(c, ctx, myPlayerChannel)
+			myPlayerId, myPlayerChannel = myGame.Subscribe(myPlayerName)
+			go listenPlayerChannel(c, ctx, myPlayerId, myPlayerName, myPlayerChannel)
 		case "join":
+			log.Printf("Joining game...")
 			_myGame, ok := getGameFromMap(gameDetails.gameId)
 			myGame = _myGame
 			if !ok {
 				c.Close(websocket.StatusUnsupportedData, "GameID corrupted")
+				return
 			}
 			myPlayerName = gameDetails.playerName
-			myPlayerId, myPlayerChannel, err = myGame.Subscribe(myPlayerName)
-			if err != nil {
-				c.Close(websocket.StatusUnsupportedData, err.Error())
-			}
-			go listenPlayerChannel(c, ctx, myPlayerChannel)
+			myPlayerId, myPlayerChannel = myGame.Subscribe(myPlayerName)
+			go listenPlayerChannel(c, ctx, myPlayerId, myPlayerName, myPlayerChannel)
 		default:
+			if gameDetails.playerId != myPlayerId {
+				c.Close(websocket.StatusUnsupportedData, "playerId corrupted")
+				return
+			}
+			if gameDetails.gameId != myGame.id {
+				c.Close(websocket.StatusUnsupportedData, "gameId corrupted")
+				return
+			}
 			if myPlayerName != gameDetails.playerName {
 				c.Close(websocket.StatusUnsupportedData, "PlayerName corrupted")
+				return
 			}
 		}
+		log.Printf("playerId: %v", myPlayerId)
+		log.Printf("playerName: %v", myPlayerName)
+		log.Printf("gameId: %v", myGame.id)
+		log.Printf("actionId: %v", gameDetails.actionId)
+		log.Printf("Passing inputs to game core...")
 		myGame.inputCh <- data
 	}
 }
-func listenPlayerChannel(c *websocket.Conn, ctx context.Context, myPlayerChannel chan GameState) {
+func listenPlayerChannel(c *websocket.Conn, ctx context.Context, playerId string, playerName string, myPlayerChannel chan GameState) {
 	var err error
+	log.Printf("Player channel opened...")
 	for {
 		gameState := <-myPlayerChannel
+		if gameState.err != nil {
+			c.Close(websocket.StatusUnsupportedData, err.Error())
+			return
+		}
 		log.Printf("New game state received")
-		err = wsjson.Write(ctx, c, gameState)
+		output := convertGameStateToOutput(gameState, playerId, playerName)
+		err = wsjson.Write(ctx, c, output)
 		if err != nil {
+			c.Close(websocket.StatusInternalError, err.Error())
 			log.Printf("Error in write")
-			break
+			return
 		}
 	}
-	if websocket.CloseStatus(err) == websocket.StatusGoingAway {
-		err = nil
-	}
-	c.Close(websocket.StatusNormalClosure, "")
 }
