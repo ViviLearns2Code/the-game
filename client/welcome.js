@@ -38,15 +38,39 @@ class WelcomeUI extends PIXI.Container {
       console.debug("sending: " + message)
       websocket.send(message);
     }
+    this.visible = false
   }
 
   parseGameState(gameState) {
 
-    this.visible = !("gameState" in gameState);
+    var visibleBefore = this.targetVisible;
+    this.targetVisible = !gameState.gameState;
 
-    //this.visible = gameState.state == "welcome";
-    if (!this.visible)
-      return
+    if (visibleBefore != this.targetVisible) {
+
+      if (this.tween)
+        this.tween.stop()
+
+      const coords = {scale: visibleBefore ? 1 : 0}
+
+      var self = this;
+      this.tween = new TWEEN.Tween(coords)
+        .to({scale: this.targetVisible ? 1 : 0}, 750)
+        .easing(TWEEN.Easing.Quadratic.In)
+        .onUpdate(() => {
+          self.scale.x = coords.scale;
+          self.scale.y = coords.scale;
+        })
+        .onStart(()=>{
+          if (this.targetVisible)
+            self.visible = true
+        })
+        .onComplete(()=>{
+          if (!this.targetVisible)
+            self.visible = false
+        })
+        .start()
+    }
 
   }
 }

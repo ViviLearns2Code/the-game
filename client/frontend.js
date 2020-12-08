@@ -56,6 +56,15 @@ websocket.onopen = function (event) {
   console.debug("OPENED SOCKET")
 }
 
+
+
+// Setup the animation loop.
+function animate(time) {
+	requestAnimationFrame(animate)
+	TWEEN.update(time)
+}
+requestAnimationFrame(animate)
+
 parseGameStateGlobal(JSON.parse('{}'));
 //switchView("welcome")
 /*

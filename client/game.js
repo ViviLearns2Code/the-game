@@ -87,7 +87,6 @@ class GameUI extends PIXI.Container {
     this.playCardButton.buttonMode = true;
     this.playCardButton.on('pointerdown', onPlayCardButtonClick.bind(this));
     function onPlayCardButtonClick() {
-      console.debug(this.hand)
       var message = JSON.stringify(
         {
           "actionId": "card",
@@ -101,12 +100,45 @@ class GameUI extends PIXI.Container {
       websocket.send(message);
     }
 
+    this.visible = false
+    this.targetVisible = false
   }
 
   parseGameState(gameState) {
-    this.visible = "gameState" in gameState;
-    if (!this.visible)
+
+    var visibleBefore = this.targetVisible;
+    this.targetVisible = gameState.gameState;
+
+    if (visibleBefore != this.targetVisible) {
+
+      if (this.tween)
+        this.tween.stop()
+
+      const coords = {scale: visibleBefore ? 1 : 0}
+
+      var self = this;
+      this.tween = new TWEEN.Tween(coords)
+        .to({scale: this.targetVisible ? 1 : 0}, 750)
+        .easing(TWEEN.Easing.Quadratic.In)
+        .onUpdate(() => {
+          self.scale.x = coords.scale;
+          self.scale.y = coords.scale;
+        })
+        .onStart(()=>{
+          if (this.targetVisible)
+            self.visible = true
+        })
+        .onComplete(()=>{
+          if (!this.targetVisible)
+            self.visible = false
+        })
+        .start()
+    }
+
+    if (!this.targetVisible)
       return
+
+
     this.levelText.text = "Level " + gameState.gameState.level;
     this.livesText.text = "Lives " + gameState.gameState.lives;
     this.starsText.text = "Stars " + gameState.gameState.stars;
