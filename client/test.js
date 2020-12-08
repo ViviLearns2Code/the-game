@@ -22,7 +22,7 @@ class TestUI extends PIXI.Container {
     testb1.on('pointerdown', onTestB1Click);
     function onTestB1Click() {
       var text = '{ "state":"lobby"}';
-      parseGameStateGlobal(text)
+      parseGameStateGlobal(JSON.parse(text))
     }
 
     const testb2 = new PIXI.Text('Playtest', style);
@@ -33,7 +33,7 @@ class TestUI extends PIXI.Container {
     testb2.on('pointerdown', onTestB2Click);
     function onTestB2Click() {
       var text = '{ "state":"game"}';
-      parseGameStateGlobal(text)
+      parseGameStateGlobal(JSON.parse(text))
     }
 
     const testb3 = new PIXI.Text('Playtest', style);
@@ -44,7 +44,7 @@ class TestUI extends PIXI.Container {
     testb3.on('pointerdown', onTestB3Click);
     function onTestB3Click() {
       var text = '{"gameId": "1","playerId": "1","gameState": {"hand": [20,43,61,62,68,90,100],"playersCardCount": [{"bob": 7,"alice": 4}],"topCard": 10,"level": 1,"lives": 3,"stars": 1},"event": {"type": "propose-star","triggeredBy": "bob","proStar": ["bob"],"conStar": [],"discarded": []}}'
-      parseGameStateGlobal(text)
+      parseGameStateGlobal(JSON.parse(text))
     }
 
   }

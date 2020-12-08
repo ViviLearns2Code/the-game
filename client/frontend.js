@@ -1,4 +1,4 @@
-var websocket = new WebSocket("wss://www.example.com/socketserver");
+var websocket = new WebSocket("ws://192.168.178.23:4000/socket");
 gameId = -1
 playerId = -1
 playerName = ""
@@ -18,8 +18,8 @@ app.stage.addChild(gameContainer);
 testContainer = new TestUI()
 app.stage.addChild(testContainer)
 
-function parseGameStateGlobal(gameStateJSON) {
-  var gameState = JSON.parse(gameStateJSON);
+function parseGameStateGlobal(gameState) {
+  //var gameState = JSON.parse(gameStateJSON);
   welcomeContainer.parseGameState(gameState);
   lobbyContainer.parseGameState(gameState);
   gameContainer.parseGameState(gameState);
@@ -30,18 +30,33 @@ websocket.onmessage = function (event) {
   console.log(event.data);
 
   var gameState = JSON.parse(event.data); // TODO: Avoid duplicate JSON extraction
-
-  if ("gameState" in gameState)
-    parseGameStateGlobal(event.data);
-  else {
+  print(gameState)
+  //if (gameState.gameState)
+    parseGameStateGlobal(gameState);
+  //else {
     gameId = gameState.gameId;
     playerId = gameState.playerId;
     playerName = gameState.playerName;
-  }
+    console.debug(gameId)
+    console.debug(playerId)
+    console.debug(playerName)
+  //}
 
 }
+websocket.onclose = function (event) {
+  console.debug("SOCKET CLOSED")
+  console.debug(event)
+  console.debug(event.reason)
+}
+websocket.onerror = function (event) {
+  console.debug("SOCKET ONERROR")
+  console.debug(event)
+}
+websocket.onopen = function (event) {
+  console.debug("OPENED SOCKET")
+}
 
-parseGameStateGlobal('{"state" : "welcome"}');
+parseGameStateGlobal(JSON.parse('{}'));
 //switchView("welcome")
 /*
 const basicText = new PIXI.Text('Basic text in pixi');

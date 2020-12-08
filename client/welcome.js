@@ -27,14 +27,16 @@ class WelcomeUI extends PIXI.Container {
     hostButton.buttonMode = true;
     hostButton.on('pointerdown', onHostButtonClick);
     function onHostButtonClick() {
-      if (inputName.value == "")
+      if (inputName.text == "")
         return;
-      websocket.send(JSON.stringify(
+      var message = JSON.stringify(
         {
-          "action": "create",
-          "player_name": inputName.value
+          "actionId": "create",
+          "playerName": inputName.text,
         }
-      ));
+      );
+      console.debug("sending: " + message)
+      websocket.send(message);
     }
   }
 
