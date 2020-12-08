@@ -6,31 +6,35 @@ import (
 	"log"
 )
 
+type subscription struct {
+	playerId      string
+	playerName    string
+	playerChannel chan GameState
+}
+
 type Game struct {
 	id        string
 	inputCh   chan map[string]string
 	publishCh chan GameState
-	subCh     chan chan GameState
-	unsubCh   chan chan GameState
-	players   map[string]string
-	started   bool
+	subCh     chan subscription
+	unsubCh   chan subscription
 }
 
 func NewGame() *Game {
 	return &Game{
-		id:        uuid.New().String(),
+		id:        uuid.New().String(), //concurrent reads only!
 		inputCh:   make(chan map[string]string),
 		publishCh: make(chan GameState, 1),
-		subCh:     make(chan chan GameState, 1),
-		unsubCh:   make(chan chan GameState, 1),
-		players:   make(map[string]string),
-		started:   false,
+		subCh:     make(chan subscription, 1),
+		unsubCh:   make(chan subscription, 1),
 	}
 }
 
 type GameState struct {
 	gameId         string
 	playerIdToName map[string]string
+	started        bool
+	err            error
 }
 
 func describe(i interface{}) {
@@ -39,25 +43,35 @@ func describe(i interface{}) {
 
 func (g *Game) Start() {
 	// loop
-	var subs = make(map[chan GameState]struct{})
+	var subs = make(map[string]chan GameState)
+	var players = make(map[string]string)
+	var started = false
+	var err error
 	for {
 		select {
 		case raw := <-g.inputCh:
 			describe(raw)
 			g.publishCh <- GameState{
 				g.id,
-				g.players,
+				players,
+				started,
+				err,
 			}
-		case msgCh := <-g.subCh:
-			subs[msgCh] = struct{}{}
-		case msgCh := <-g.unsubCh:
-			delete(subs, msgCh)
-		case msg := <-g.publishCh:
+		case subscriber := <-g.subCh:
+			if len(players) >= 4 || started {
+				err = errors.New("Cannot join game anymore")
+				subscriber.playerChannel <- GameState{}
+			} else {
+				players[subscriber.playerId] = subscriber.playerName
+			}
+			subs[subscriber.playerId] = subscriber.playerChannel
+		case subscriber := <-g.unsubCh:
+			delete(subs, subscriber.playerId)
+		case gameState := <-g.publishCh:
 			log.Printf("New game state published")
-			for msgCh := range subs {
-				// msgCh is buffered, use non-blocking send to protect the broker:
+			for _, playerChannel := range subs {
 				select {
-				case msgCh <- msg:
+				case playerChannel <- gameState:
 					// handled by goroutine in main.go
 				default:
 				}
@@ -66,21 +80,23 @@ func (g *Game) Start() {
 	}
 }
 
-func (g *Game) Subscribe(playerName string) (string, chan GameState, error) {
+func (g *Game) Subscribe(playerName string) (string, chan GameState) {
 	playerId := uuid.New().String()
 	playerChannel := make(chan GameState)
-	var err error
-	g.subCh <- playerChannel
-	if len(g.players) >= 4 || g.started {
-		err = errors.New("Cannot join game anymore")
-	} else {
-		g.players[playerId] = playerName
+	g.subCh <- subscription{
+		playerId:      playerId,
+		playerName:    playerName,
+		playerChannel: playerChannel,
 	}
-	return playerId, playerChannel, err
+	return playerId, playerChannel
 }
 
-func (g *Game) Unsubscribe(playerChannel chan GameState) {
-	g.unsubCh <- playerChannel
+func (g *Game) Unsubscribe(playerId string, playerName string, playerChannel chan GameState) {
+	g.unsubCh <- subscription{
+		playerId:      playerId,
+		playerName:    playerName,
+		playerChannel: playerChannel,
+	}
 }
 
 func (g *Game) PublishState(gameState GameState) {
