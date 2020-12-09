@@ -40,16 +40,18 @@ var rootTemplate = template.Must(template.New("root").Parse(`
 			"playerName": document.getElementById("player-name").value,
 			"actionId": document.getElementById("action-id").value,
 			"playerId": document.getElementById("player-id").value,
+			"cardId": document.getElementById("card-id").value,
 			"gameId": document.getElementById("game-id").value
 		}));
 	}
 	websocket.onmessage = onMessage;
 	websocket.onclose = onClose;
 </script>
-Player Name <input id="player-name"/>
-Action Id <input id="action-id"/>
-Player Id <input id="player-id"/>
-Game Id <input id="game-id"/>
+Player Name <input id="player-name"/></br>
+Action Id <input id="action-id"/></br>
+Player Id <input id="player-id"/></br>
+Game Id <input id="game-id"/></br>
+Card Id <input id="card-id"/></br>
 <button onclick="onSend(this)">Send</button>
 <div id="chat"></div>
 </html>
@@ -168,17 +170,18 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 */
-func extractDetails(raw map[string]string) inputDetails {
-	var gameId, _ = raw["gameId"]
-	var playerId, _ = raw["playerId"]
-	var playerName, _ = raw["playerName"]
-	var actionId, _ = raw["actionId"]
+func extractDetails(raw map[string]interface{}) inputDetails {
+	var gameId, _ = raw["gameId"].(string)
+	var playerId, _ = raw["playerId"].(string)
+	var playerName, _ = raw["playerName"].(string)
+	var actionId, _ = raw["actionId"].(string)
+	var cardId, _ = raw["card"].(int)
 	var details = inputDetails{
 		gameId:     gameId,
 		playerId:   playerId,
 		playerName: playerName,
 		actionId:   actionId,
-		raw:        raw,
+		cardId:     cardId,
 	}
 	return details
 }
@@ -203,7 +206,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 	var myPlayerChannel chan GameState
 	log.Printf("Entering loop...")
 	for {
-		var data = make(map[string]string)
+		var data = make(map[string]interface{})
 		var err = wsjson.Read(ctx, c, &data)
 		if err != nil {
 			log.Printf("Error reading json %e", err)
@@ -257,7 +260,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 		log.Printf("gameId: %v", myGame.id)
 		log.Printf("actionId: %v", gameDetails.actionId)
 		log.Printf("Passing inputs to game core...")
-		myGame.inputCh <- data
+		myGame.inputCh <- gameDetails
 	}
 }
 func listenPlayerChannel(c *websocket.Conn, ctx context.Context, playerId string, playerName string, myPlayerChannel chan GameState) {

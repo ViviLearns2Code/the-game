@@ -6,7 +6,7 @@ type inputDetails struct {
 	playerId   string
 	playerName string
 	actionId   string
-	raw        map[string]string
+	cardId     int
 }
 
 type GameStateOutput struct {
@@ -33,7 +33,7 @@ type subscription struct {
 
 type Game struct {
 	id        string
-	inputCh   chan map[string]string
+	inputCh   chan inputDetails
 	publishCh chan GameState
 	subCh     chan subscription
 	unsubCh   chan subscription

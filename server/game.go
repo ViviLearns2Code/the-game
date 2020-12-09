@@ -2,14 +2,15 @@ package main
 
 import (
 	"errors"
-	"github.com/google/uuid"
 	"log"
+
+	"github.com/google/uuid"
 )
 
 func NewGame() *Game {
 	return &Game{
 		id:        uuid.New().String(), //concurrent reads only!
-		inputCh:   make(chan map[string]string),
+		inputCh:   make(chan inputDetails),
 		publishCh: make(chan GameState, 1),
 		subCh:     make(chan subscription, 1),
 		unsubCh:   make(chan subscription, 1),

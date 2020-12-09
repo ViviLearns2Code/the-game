@@ -228,7 +228,7 @@ Alice joins the game Bob created
 // push to server from alice
 {
   "actionId": "card",
-  "card": 12,
+  "cardId": 12,
   "gameId": "1",
   "playerId": "2",
   "playerName": "alice"
