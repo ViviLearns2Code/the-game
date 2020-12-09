@@ -254,7 +254,6 @@ Alice joins the game Bob created
   "event": {
     "type": "placed-card",
     "triggeredBy": "alice",
-    "success": true,
     "details": {
       "levelUp": false,
       "newSkill": "",
@@ -287,7 +286,6 @@ Rainy day scenario (Bob has 11 on his hand)
   "event": {
     "type": "placed-card",
     "triggeredBy": "alice",
-    "success": false,
     "details": {
       "discarded": [["bob", 11]],
       "dead": false
