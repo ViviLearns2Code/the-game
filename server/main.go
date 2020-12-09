@@ -137,50 +137,9 @@ func main() {
 	}
 }
 
-/*
-func wsHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("hello handler")
-	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		OriginPatterns: []string{"http://0.0.0.0"},
-	})
-	if err != nil {
-		log.Printf("error in accept")
-		return
-	}
-	defer c.Close(websocket.StatusInternalError, "internal error")
-
-	ctx, cancel := context.WithTimeout(r.Context(), time.Hour*120000)
-	defer cancel()
-
-	for {
-		fmt.Println("main", goid())
-		var v = make(map[string]string)
-		log.Printf("hello for")
-		err = wsjson.Read(ctx, c, &v)
-		log.Printf("received: %v", v)
-		if err != nil {
-			log.Printf("error in read")
-			break
-		}
-		err = wsjson.Write(ctx, c, struct{ Message string }{
-			"hello, browser",
-		})
-		if err != nil {
-			log.Printf("error in write")
-			break
-		}
-	}
-	if websocket.CloseStatus(err) == websocket.StatusGoingAway {
-		err = nil
-	}
-	log.Printf("bye handler")
-	c.Close(websocket.StatusNormalClosure, "")
-	return
-}
-*/
 func extractDetails(raw map[string]interface{}) inputDetails {
-	var gameId, _ = raw["gameId"].(string)
-	var playerId, _ = raw["playerId"].(string)
+	var gameId, _ = raw["gameToken"].(string)
+	var playerId, _ = raw["playerToken"].(string)
 	var playerName, _ = raw["playerName"].(string)
 	var actionId, _ = raw["actionId"].(string)
 	var cardId, _ = raw["card"].(int)
