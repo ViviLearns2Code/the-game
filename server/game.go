@@ -6,20 +6,6 @@ import (
 	"log"
 )
 
-type subscription struct {
-	playerId      string
-	playerName    string
-	playerChannel chan GameState
-}
-
-type Game struct {
-	id        string
-	inputCh   chan map[string]string
-	publishCh chan GameState
-	subCh     chan subscription
-	unsubCh   chan subscription
-}
-
 func NewGame() *Game {
 	return &Game{
 		id:        uuid.New().String(), //concurrent reads only!
@@ -28,13 +14,6 @@ func NewGame() *Game {
 		subCh:     make(chan subscription, 1),
 		unsubCh:   make(chan subscription, 1),
 	}
-}
-
-type GameState struct {
-	gameId         string
-	playerIdToName map[string]string
-	started        bool
-	err            error
 }
 
 func describe(i interface{}) {

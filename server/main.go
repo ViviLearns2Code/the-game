@@ -1,19 +1,19 @@
 package main
 
 import (
-	//"encoding/json"
 	"context"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
-	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wsjson"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
 
 var rootTemplate = template.Must(template.New("root").Parse(`
@@ -82,29 +82,6 @@ func addGameToMap(gameId string, game Game) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	gameMap[gameId] = game
-}
-
-type gameDetails struct {
-	gameId     string
-	playerId   string
-	playerName string
-	actionId   string
-	raw        map[string]string
-}
-
-type GameStateOutput struct {
-	TopCard int   `json:"topCard, omitempty"`
-	Level   int   `json:"level, omitempty"`
-	Lives   int   `json:"lives, omitempty"`
-	Stars   int   `json:"stars, omitempty"`
-	Hand    []int `json:"hand, omitempty"`
-}
-
-type GameOutput struct {
-	GameId     string           `json:"gameId"`
-	PlayerId   string           `json:"playerId"`
-	PlayerName string           `json:"playerName"`
-	GameState  *GameStateOutput `json:"gameState, omitempty"`
 }
 
 func convertGameStateToOutput(gameState GameState, playerId string, playerName string) GameOutput {
@@ -187,12 +164,12 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 */
-func extractDetails(raw map[string]string) gameDetails {
+func extractDetails(raw map[string]string) inputDetails {
 	var gameId, _ = raw["gameId"]
 	var playerId, _ = raw["playerId"]
 	var playerName, _ = raw["playerName"]
 	var actionId, _ = raw["actionId"]
-	var details = gameDetails{
+	var details = inputDetails{
 		gameId:     gameId,
 		playerId:   playerId,
 		playerName: playerName,
