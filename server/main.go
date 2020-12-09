@@ -38,14 +38,18 @@ var rootTemplate = template.Must(template.New("root").Parse(`
 	var onSend = function(e){
 		websocket.send(JSON.stringify({
 			"playerName": document.getElementById("player-name").value,
-			"actionId": document.getElementById("action-id").value
+			"actionId": document.getElementById("action-id").value,
+			"playerId": document.getElementById("player-id").value,
+			"gameId": document.getElementById("game-id").value
 		}));
 	}
 	websocket.onmessage = onMessage;
 	websocket.onclose = onClose;
 </script>
 Player Name <input id="player-name"/>
-Action Id <input id="action-id">
+Action Id <input id="action-id"/>
+Player Id <input id="player-id"/>
+Game Id <input id="game-id"/>
 <button onclick="onSend(this)">Send</button>
 <div id="chat"></div>
 </html>
