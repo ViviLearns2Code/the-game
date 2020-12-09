@@ -9,11 +9,7 @@ Bob creates a game
   "playerName": "bob"
 }
 // response
-{
-  "gameId": "1",
-  "playerId": "1",
-  "playerName": "bob"
-}
+// -> The great big response structure
 ```
 ## Join Game
 Alice joins the game Bob created
@@ -25,12 +21,95 @@ Alice joins the game Bob created
   "playerName": "alice"
 }
 // response
+// -> The great big response structure
+```
+## The great not so big request structure
+```json
 {
-  "gameId": "1",
-  "playerId": "2",
-  "playerName": "alice"
+  "actionId": "concentrate",
+  "gameToken": "uiaoy1246247dnr",
+  "playerToken": "1135dtrndtrn7365",
+  "card": null
 }
 ```
+
+## The great big response structure
+```json
+{
+  "gameToken": "usxu34vywr12-1346174", // random token
+  "playerName": "Tom",
+  "playerId": "2", // 1-4
+  "playerToken": "uiodu-241346147uiaedtrnu-", // random token
+  "playerNames": [{
+    "1": "Tom",
+    "2": "Jerry",
+    "3": "Tom",
+    "4": "Tom"
+  }],
+  "cards": {
+    "hand": [35,40,99],
+    "playersCardCount": [{
+      "1": 7, // playerId!
+      "2": 3,
+      "3": 3,
+      "4": 3
+    }],
+    "topCard": 12,
+    "level": 1,
+    "lives": 3,
+    "stars": 1
+  },
+  "placed-card": {
+    "active": "true",
+    "triggeredBy": "3", // playerId
+    "discarded": [["4", 11]], // playerId's and discarded cards
+  },
+  "game-over": {
+    "active": false
+  },
+  "level-finished": {
+    "active": false,
+    "levelUp": false,
+    "levelTitle": "",
+    "starsIncrease": true,
+    "livesIncrease": false,
+  },
+  "lobby": {
+    "active": false,
+    "ready": ["2", "4"],
+  },
+  "concentrating": {
+    "active": false,
+    "triggeredBy": "2",
+    "ready": ["1", "2"],
+  },
+  "proposed-star": {
+    "active": false,
+    "triggeredBy": "1",
+    "proStar": ["1", "3"],
+    "conStar": null,
+  },
+  "agree-star": {
+    "active": true,
+    "triggeredBy": "3",
+    "proStar": ["3", "4"],
+    "conStar": [],
+  },
+  "reject-star": {
+    "active": false,
+    "triggeredBy": "2",
+    "proStar": ["2", "4"],
+    "conStar": [],
+  },
+  "star-accepted": {
+    "active": true,
+    "lowest-discarded": [["4", 11]], // playerId's and discarded cards
+  }
+}
+```
+
+
+
 ## Simple Actions
 * concentrate
 * ready
@@ -44,9 +123,9 @@ Alice joins the game Bob created
 // push to server from bob
 {
   "actionId": "concentrate",
-  "gameId": "1",
-  "playerId": "1",
-  "playerName": "bob"
+  "gameToken": "uiaoy1246247dnr",
+  "playerToken": "1135dtrndtrn7365",
+  "cardId": null
 }
 ```
 * Server pushes to both players
@@ -237,31 +316,7 @@ Alice joins the game Bob created
 * Sunny day scenario: The card was placed in the correct order
 ```json
 // push to alice from server
-{
-  "gameId": "1",
-  "playerId": "2",
-  "gameState": {
-    "hand": [35,40,99],
-    "playersCardCount": [{
-      "bob": 7,
-      "alice": 3
-    }],
-    "topCard": 12,
-    "level": 1,
-    "lives": 3,
-    "stars": 1
-  },
-  "event": {
-    "type": "placed-card",
-    "triggeredBy": "alice",
-    "details": {
-      "levelUp": false,
-      "newSkill": "",
-      "starsIncrease": 0,
-      "livesIncrease": 0
-    }
-  }
-}
+
 ```
 Rainy day scenario (Bob has 11 on his hand)
 ```json
