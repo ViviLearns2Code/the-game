@@ -16,6 +16,10 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 
+// Add start action
+// Add leave action
+// Add unsubscribe if input checks fail
+
 var rootTemplate = template.Must(template.New("root").Parse(`
 <!DOCTYPE html>
 <html>
@@ -37,11 +41,10 @@ var rootTemplate = template.Must(template.New("root").Parse(`
 	}
 	var onSend = function(e){
 		websocket.send(JSON.stringify({
-			"playerName": document.getElementById("player-name").value,
 			"actionId": document.getElementById("action-id").value,
-			"playerId": document.getElementById("player-id").value,
+			"playerToken": document.getElementById("player-token").value,
 			"cardId": document.getElementById("card-id").value,
-			"gameId": document.getElementById("game-id").value
+			"gameToken": document.getElementById("game-token").value
 		}));
 	}
 	websocket.onmessage = onMessage;
@@ -49,8 +52,8 @@ var rootTemplate = template.Must(template.New("root").Parse(`
 </script>
 Player Name <input id="player-name"/></br>
 Action Id <input id="action-id"/></br>
-Player Id <input id="player-id"/></br>
-Game Id <input id="game-id"/></br>
+Player Token <input id="player-token"/></br>
+Game Token <input id="game-token"/></br>
 Card Id <input id="card-id"/></br>
 <button onclick="onSend(this)">Send</button>
 <div id="chat"></div>
@@ -107,7 +110,12 @@ func convertGameStateToOutput(gameState GameState, playerId string, playerName s
 	return gameOutput
 }
 func isValidAction(actionId string) bool {
-	actions := [8]string{"create", "join", "concentrate", "ready", "propose-star", "agree-star", "reject-star", "card"}
+	actions := [10]string{
+		"create", "join", "start", "leave",
+		"concentrate", "ready",
+		"propose-star", "agree-star", "reject-star",
+		"card",
+	}
 	for _, a := range actions {
 		if a == actionId {
 			return true
@@ -177,11 +185,11 @@ func extractDetails(raw map[string]interface{}) inputDetails {
 	var actionId, _ = raw["actionId"].(string)
 	var cardId, _ = raw["card"].(int)
 	var details = inputDetails{
-		gameId:     gameId,
-		playerId:   playerId,
-		playerName: playerName,
-		actionId:   actionId,
-		cardId:     cardId,
+		gameToken:   gameId,
+		playerToken: playerId,
+		playerName:  playerName,
+		actionId:    actionId,
+		cardId:      cardId,
 	}
 	return details
 }
@@ -232,7 +240,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			go listenPlayerChannel(c, ctx, myPlayerId, myPlayerName, myPlayerChannel)
 		case "join":
 			log.Printf("Joining game...")
-			_myGame, ok := getGameFromMap(gameDetails.gameId)
+			_myGame, ok := getGameFromMap(gameDetails.gameToken)
 			myGame = _myGame
 			if !ok {
 				c.Close(websocket.StatusUnsupportedData, "GameID corrupted")
@@ -242,11 +250,11 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			myPlayerId, myPlayerChannel = myGame.Subscribe(myPlayerName)
 			go listenPlayerChannel(c, ctx, myPlayerId, myPlayerName, myPlayerChannel)
 		default:
-			if gameDetails.playerId != myPlayerId {
+			if gameDetails.playerToken != myPlayerId {
 				c.Close(websocket.StatusUnsupportedData, "playerId corrupted")
 				return
 			}
-			if gameDetails.gameId != myGame.id {
+			if gameDetails.gameToken != myGame.id {
 				c.Close(websocket.StatusUnsupportedData, "gameId corrupted")
 				return
 			}

@@ -1,58 +1,49 @@
 # Interfaces
 The stream of information between client and server is bidirectional. The communication interfaces are defined below.
-## Create Game
-Bob creates a game
-```json
-// push to server from bob
-{
-  "actionId": "create",
-  "playerName": "bob"
-}
-// response
-// -> The great big response structure
-```
-## Join Game
-Alice joins the game Bob created
-```json
-// push to server from alice
-{
-  "actionId": "join",
-  "gameId": "1",
-  "playerName": "alice"
-}
-// response
-// -> The great big response structure
-```
-## The great not so big request structure
+
+## Requests
+The request json has a static structure, but fields can be null depending on the context.
 ```json
 {
+  "playerName": "bob", // uuid string
+  "playerToken": "1135dtr-ndtrn7365", // uuid string
+  "gameToken": "uiaoy12-46247dnr", // uuid string
   "actionId": "concentrate",
-  "gameToken": "uiaoy1246247dnr",
-  "playerToken": "1135dtrndtrn7365",
   "card": null
 }
 ```
+Possible `actionIds`
+* create
+* join
+* start
+* leave
+* concentrate
+* ready
+* propose-star
+* agree-star
+* reject-star
 
-## The great big response structure
+## Response
+The response json has a static structure, but fields can be null depending on the context.
 ```json
 {
-  "gameToken": "usxu34vywr12-1346174", // random token
-  "playerName": "Tom",
-  "playerId": "2", // 1-4
-  "playerToken": "uiodu-241346147uiaedtrnu-", // random token
+  "gameToken": "usxu34vywr12-1346174", // uuid string
+  "playerName": "bob",
+  "playerId": "1", // 1-4 unique per player
+  "playerToken": "uiodu-241346147uiaedtrnu-", // uuid string
   "playerNames": [{
-    "1": "Tom",
-    "2": "Jerry",
-    "3": "Tom",
-    "4": "Tom"
+    "1": "bob",
+    "2": "alice",
+    "3": "bob", // playerName does not need to be unique
+    "4": ""
   }],
   "cards": {
     "hand": [35,40,99],
-    "playersCardCount": [{
-      "1": 7, // playerId!
+    "playersCardCount": [{ // playerId -> #cards
+      "1": 7,
       "2": 3,
       "3": 3,
-      "4": 3
+      "4": 0
     }],
     "topCard": 12,
     "level": 1,
@@ -60,9 +51,9 @@ Alice joins the game Bob created
     "stars": 1
   },
   "placed-card": {
-    "active": "true",
+    "active": true,
     "triggeredBy": "3", // playerId
-    "discarded": [["4", 11]], // playerId's and discarded cards
+    "discarded": [["4", 11]], // [playerId, discarded card]
   },
   "game-over": {
     "active": false
@@ -78,12 +69,12 @@ Alice joins the game Bob created
     "active": false,
     "ready": ["2", "4"],
   },
-  "concentrating": {
+  "concentrate": {
     "active": false,
     "triggeredBy": "2",
     "ready": ["1", "2"],
   },
-  "proposed-star": {
+  "propose-star": {
     "active": false,
     "triggeredBy": "1",
     "proStar": ["1", "3"],
@@ -101,250 +92,9 @@ Alice joins the game Bob created
     "proStar": ["2", "4"],
     "conStar": [],
   },
-  "star-accepted": {
+  "used-star": {
     "active": true,
-    "lowest-discarded": [["4", 11]], // playerId's and discarded cards
-  }
-}
-```
-
-
-
-## Simple Actions
-* concentrate
-* ready
-* propose-star
-* agree-star
-* reject-star
-
-### Request Concentration & Player Readiness
-* Bob requests concentration
-```json
-// push to server from bob
-{
-  "actionId": "concentrate",
-  "gameToken": "uiaoy1246247dnr",
-  "playerToken": "1135dtrndtrn7365",
-  "cardId": null
-}
-```
-* Server pushes to both players
-```json
-// push to bob from server
-{
-  "gameId": "1",
-  "playerId": "1",
-  "gameState": {
-    "hand": [20,43,61,62,68,90,100],
-    "playersCardCount": [{
-      "bob": 7,
-      "alice": 4
-    }],
-    "topCard": 10,
-    "level": 1,
-    "lives": 3,
-    "stars": 1,
-  },
-  "event": {
-    "type": "concentrate",
-    "triggeredBy": "bob",
-    "notReady": ["bob", "alice"],
-  }
-}
-// push to alice from server
-{
-  "gameId": "1",
-  "playerId": "2",
-  "gameState": {
-    "hand": [12,35,40,99],
-    "playersCardCount": [{
-      "bob": 7,
-      "alice": 4
-    }],
-    "topCard": 10,
-    "level": 1,
-    "lives": 3,
-    "stars": 1,
-  },
-  "event": {
-    "type": "concentrate",
-    "triggeredBy": "bob",
-    "notReady": ["bob", "alice"],
-  }
-}
-```
-* Alice notifies the server that she is ready
-```json
-// push to server from alice
-{
-  "actionId": "ready",
-  "gameId": "1",
-  "playerId": "2",
-  "playerName": "alice"
-}
-```
-* Server pushes to both players
-```json
-// push to bob from server
-{
-  "gameId": "1",
-  "playerId": "1",
-  "gameState": {
-    "hand": [12,35,40,99],
-    "playersCardCount": [{
-      "bob": 7,
-      "alice": 4
-    }],
-    "topCard": 10,
-    "level": 1,
-    "lives": 3,
-    "stars": 1
-  },
-  "event": {
-    "type": "ready",
-    "triggeredBy": "alice",
-    "notReady": ["bob"],
-  }
-}
-// push to alice from server
-{
-  "gameId": "1",
-  "playerId": "2",
-  "gameState": {
-    "hand": [12,35,40,99],
-    "playersCardCount": [{
-      "bob": 7,
-      "alice": 4
-    }],
-    "topCard": 10,
-    "level": 1,
-    "lives": 3,
-    "stars": 1
-  },
-  "event": {
-    "type": "ready",
-    "triggeredBy": "alice",
-    "notReady": ["bob"],
-  }
-}
-```
-### Request & Use Star
-* Bob requests a star
-```json
-// push to server from bob
-{
-  "actionId": "propose-star",
-  "gameId": "1",
-  "playerId": "1",
-  "playerName": "bob"
-}
-```
-* Server pushes to both players, below is the example for Bob
-```json
-// push to bob from server
-{
-  "gameId": "1",
-  "playerId": "1",
-  "gameState": {
-    "hand": [20,43,61,62,68,90,100],
-    "playersCardCount": [{
-      "bob": 7,
-      "alice": 4
-    }],
-    "topCard": 10,
-    "level": 1,
-    "lives": 3,
-    "stars": 1,
-  },
-  "event": {
-    "type": "propose-star",
-    "triggeredBy": "bob",
-    "proStar": ["bob"],
-    "conStar": [],
-    "discarded": []
-  }
-}
-```
-* Alice agrees
-```json
-// push to server from alice
-{
-  "actionId": "agree-star",
-  "gameId": "1",
-  "playerId": "2",
-  "playerName": "alice"
-}
-```
-* Server pushes to both players, below is the example for Bob
-```json
-// push to bob from server
-{
-  "gameId": "1",
-  "playerId": "1",
-  "gameState": {
-    "hand": [20,43,61,62,68,90,100],
-    "playersCardCount": [{
-      "bob": 7,
-      "alice": 4
-    }],
-    "topCard": 10,
-    "level": 1,
-    "lives": 3,
-    "stars": 1,
-  },
-  "event": {
-    "type": "agree-star",
-    "triggeredBy": "alice",
-    "proStar": ["bob", "alice"],
-    "conStar": [],
-    "discarded": [["bob", 20], ["alice", 12]]
-  }
-}
-```
-## Play Card
-* Alice plays a card
-```json
-// push to server from alice
-{
-  "actionId": "card",
-  "cardId": 12,
-  "gameId": "1",
-  "playerId": "2",
-  "playerName": "alice"
-}
-```
-* Sunny day scenario: The card was placed in the correct order
-```json
-// push to alice from server
-
-```
-Rainy day scenario (Bob has 11 on his hand)
-```json
-// push to alice from server
-{
-  "gameId": "1",
-  "playerId": "2",
-  "gameState": {
-    "hand": [35,40,99],
-    "playersCardCount": [{
-      "bob": 6,
-      "alice": 3
-    }],
-    "topCard": 12,
-    "level": 1,
-    "lives": 2,
-    "stars": 1,
-    "notReady": [],
-    "proStar": [],
-    "conStar": []
-  },
-  "event": {
-    "type": "placed-card",
-    "triggeredBy": "alice",
-    "details": {
-      "discarded": [["bob", 11]],
-      "dead": false
-    }
+    "discarded": [["4", 11]], // [playerId, discarded card]
   }
 }
 ```

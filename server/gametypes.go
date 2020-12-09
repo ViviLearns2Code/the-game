@@ -1,12 +1,11 @@
 package main
 
-// structs for API layer
 type inputDetails struct {
-	gameId     string
-	playerId   string
-	playerName string
-	actionId   string
-	cardId     int
+	gameToken   string
+	playerToken string
+	playerName  string
+	actionId    string
+	cardId      int
 }
 
 type GameStateOutput struct {
