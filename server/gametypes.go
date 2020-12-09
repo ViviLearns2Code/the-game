@@ -17,28 +17,28 @@ type GameStateOutput struct {
 }
 
 type GameOutput struct {
-	GameId     string           `json:"gameId"`
-	PlayerId   string           `json:"playerId"`
-	PlayerName string           `json:"playerName"`
-	GameState  *GameStateOutput `json:"gameState, omitempty"`
+	GameToken   string           `json:"gameId"`
+	PlayerToken string           `json:"playerId"`
+	PlayerName  string           `json:"playerName"`
+	GameState   *GameStateOutput `json:"gameState, omitempty"`
 }
 
 // structs for game core
 type subscription struct {
-	playerId      string
+	playerToken   string
 	playerName    string
 	playerChannel chan GameState
 }
 
 type Game struct {
-	id        string
+	token     string
 	inputCh   chan inputDetails
 	publishCh chan GameState
 	subCh     chan subscription
 	unsubCh   chan subscription
 }
 type GameState struct {
-	gameId         string
+	gameToken      string
 	playerIdToName map[string]string
 	started        bool
 	err            error

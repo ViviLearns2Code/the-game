@@ -9,7 +9,7 @@ import (
 
 func NewGame() *Game {
 	return &Game{
-		id:        uuid.New().String(), //concurrent reads only!
+		token:     uuid.New().String(), //concurrent reads only!
 		inputCh:   make(chan inputDetails),
 		publishCh: make(chan GameState, 1),
 		subCh:     make(chan subscription, 1),
@@ -32,7 +32,7 @@ func (g *Game) Start() {
 		case raw := <-g.inputCh:
 			describe(raw)
 			g.publishCh <- GameState{
-				g.id,
+				g.token,
 				players,
 				started,
 				err,
@@ -42,11 +42,11 @@ func (g *Game) Start() {
 				err = errors.New("Cannot join game anymore")
 				subscriber.playerChannel <- GameState{}
 			} else {
-				players[subscriber.playerId] = subscriber.playerName
+				players[subscriber.playerToken] = subscriber.playerName
 			}
-			subs[subscriber.playerId] = subscriber.playerChannel
+			subs[subscriber.playerToken] = subscriber.playerChannel
 		case subscriber := <-g.unsubCh:
-			delete(subs, subscriber.playerId)
+			delete(subs, subscriber.playerToken)
 		case gameState := <-g.publishCh:
 			log.Printf("New game state published")
 			for _, playerChannel := range subs {
@@ -61,19 +61,19 @@ func (g *Game) Start() {
 }
 
 func (g *Game) Subscribe(playerName string) (string, chan GameState) {
-	playerId := uuid.New().String()
+	playerToken := uuid.New().String()
 	playerChannel := make(chan GameState)
 	g.subCh <- subscription{
-		playerId:      playerId,
+		playerToken:   playerToken,
 		playerName:    playerName,
 		playerChannel: playerChannel,
 	}
-	return playerId, playerChannel
+	return playerToken, playerChannel
 }
 
-func (g *Game) Unsubscribe(playerId string, playerName string, playerChannel chan GameState) {
+func (g *Game) Unsubscribe(playerToken string, playerName string, playerChannel chan GameState) {
 	g.unsubCh <- subscription{
-		playerId:      playerId,
+		playerToken:   playerToken,
 		playerName:    playerName,
 		playerChannel: playerChannel,
 	}

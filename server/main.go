@@ -42,6 +42,7 @@ var rootTemplate = template.Must(template.New("root").Parse(`
 	var onSend = function(e){
 		websocket.send(JSON.stringify({
 			"actionId": document.getElementById("action-id").value,
+			"playerName": document.getElementById("player-name").value,
 			"playerToken": document.getElementById("player-token").value,
 			"cardId": document.getElementById("card-id").value,
 			"gameToken": document.getElementById("game-token").value
@@ -80,20 +81,20 @@ func goid() int {
 var mutex = &sync.RWMutex{}
 var gameMap = make(map[string]Game)
 
-func getGameFromMap(gameId string) (Game, bool) {
+func getGameFromMap(gameToken string) (Game, bool) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	var val, ok = gameMap[gameId]
+	var val, ok = gameMap[gameToken]
 	return val, ok
 }
 
-func addGameToMap(gameId string, game Game) {
+func addGameToMap(gameToken string, game Game) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	gameMap[gameId] = game
+	gameMap[gameToken] = game
 }
 
-func convertGameStateToOutput(gameState GameState, playerId string, playerName string) GameOutput {
+func convertGameStateToOutput(gameState GameState, playerToken string, playerName string) GameOutput {
 	var gameStateOutput = GameStateOutput{
 		TopCard: 12,
 		Level:   2,
@@ -102,10 +103,10 @@ func convertGameStateToOutput(gameState GameState, playerId string, playerName s
 		Hand:    []int{20, 45, 88},
 	}
 	var gameOutput = GameOutput{
-		GameId:     gameState.gameId,
-		PlayerId:   playerId,
-		PlayerName: playerName,
-		GameState:  &gameStateOutput,
+		GameToken:   gameState.gameToken,
+		PlayerToken: playerToken,
+		PlayerName:  playerName,
+		GameState:   &gameStateOutput,
 	}
 	return gameOutput
 }
@@ -138,14 +139,14 @@ func main() {
 }
 
 func extractDetails(raw map[string]interface{}) inputDetails {
-	var gameId, _ = raw["gameToken"].(string)
-	var playerId, _ = raw["playerToken"].(string)
+	var gameToken, _ = raw["gameToken"].(string)
+	var playerToken, _ = raw["playerToken"].(string)
 	var playerName, _ = raw["playerName"].(string)
 	var actionId, _ = raw["actionId"].(string)
 	var cardId, _ = raw["card"].(int)
 	var details = inputDetails{
-		gameToken:   gameId,
-		playerToken: playerId,
+		gameToken:   gameToken,
+		playerToken: playerToken,
 		playerName:  playerName,
 		actionId:    actionId,
 		cardId:      cardId,
@@ -167,7 +168,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), time.Hour*120000)
 	defer cancel()
 
-	var myPlayerId string
+	var myPlayerToken string
 	var myPlayerName string
 	var myGame Game
 	var myPlayerChannel chan GameState
@@ -179,7 +180,13 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error reading json %e", err)
 		}
 		gameDetails := extractDetails(data)
-		log.Printf("Checking inputs")
+		log.Printf("Checking inputs...")
+		log.Printf("playerToken: %v", myPlayerToken)
+		log.Printf("playerName: %v", myPlayerName)
+		log.Printf("gameToken: %v", myGame.token)
+		log.Printf("actionId: %v", gameDetails.actionId)
+		log.Printf("cardId: %v", gameDetails.cardId)
+		log.Printf("Passing inputs to game core...")
 		if gameDetails.playerName == "" {
 			c.Close(websocket.StatusUnsupportedData, "playerName corrupted")
 			return
@@ -193,28 +200,28 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Creating game...")
 			myPlayerName = gameDetails.playerName
 			myGame = *NewGame()
-			addGameToMap(myGame.id, myGame)
+			addGameToMap(myGame.token, myGame)
 			go myGame.Start()
-			myPlayerId, myPlayerChannel = myGame.Subscribe(myPlayerName)
-			go listenPlayerChannel(c, ctx, myPlayerId, myPlayerName, myPlayerChannel)
+			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName)
+			go listenPlayerChannel(c, ctx, myPlayerToken, myPlayerName, myPlayerChannel)
 		case "join":
 			log.Printf("Joining game...")
 			_myGame, ok := getGameFromMap(gameDetails.gameToken)
 			myGame = _myGame
 			if !ok {
-				c.Close(websocket.StatusUnsupportedData, "GameID corrupted")
+				c.Close(websocket.StatusUnsupportedData, "GameToken corrupted")
 				return
 			}
 			myPlayerName = gameDetails.playerName
-			myPlayerId, myPlayerChannel = myGame.Subscribe(myPlayerName)
-			go listenPlayerChannel(c, ctx, myPlayerId, myPlayerName, myPlayerChannel)
+			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName)
+			go listenPlayerChannel(c, ctx, myPlayerToken, myPlayerName, myPlayerChannel)
 		default:
-			if gameDetails.playerToken != myPlayerId {
-				c.Close(websocket.StatusUnsupportedData, "playerId corrupted")
+			if gameDetails.playerToken != myPlayerToken {
+				c.Close(websocket.StatusUnsupportedData, "playerToken corrupted")
 				return
 			}
-			if gameDetails.gameToken != myGame.id {
-				c.Close(websocket.StatusUnsupportedData, "gameId corrupted")
+			if gameDetails.gameToken != myGame.token {
+				c.Close(websocket.StatusUnsupportedData, "gameToken corrupted")
 				return
 			}
 			if myPlayerName != gameDetails.playerName {
@@ -222,15 +229,10 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		log.Printf("playerId: %v", myPlayerId)
-		log.Printf("playerName: %v", myPlayerName)
-		log.Printf("gameId: %v", myGame.id)
-		log.Printf("actionId: %v", gameDetails.actionId)
-		log.Printf("Passing inputs to game core...")
 		myGame.inputCh <- gameDetails
 	}
 }
-func listenPlayerChannel(c *websocket.Conn, ctx context.Context, playerId string, playerName string, myPlayerChannel chan GameState) {
+func listenPlayerChannel(c *websocket.Conn, ctx context.Context, playerToken string, playerName string, myPlayerChannel chan GameState) {
 	var err error
 	log.Printf("Player channel opened...")
 	for {
@@ -240,7 +242,7 @@ func listenPlayerChannel(c *websocket.Conn, ctx context.Context, playerId string
 			return
 		}
 		log.Printf("New game state received")
-		output := convertGameStateToOutput(gameState, playerId, playerName)
+		output := convertGameStateToOutput(gameState, playerToken, playerName)
 		err = wsjson.Write(ctx, c, output)
 		if err != nil {
 			c.Close(websocket.StatusInternalError, err.Error())
