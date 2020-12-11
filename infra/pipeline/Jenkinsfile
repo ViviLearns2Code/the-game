@@ -1,20 +1,23 @@
 pipeline {
-  agent any
-  stages {
-    stage("build") {
-      steps {
-        echo 'Hello World'
-      }
+    agent {
+        docker {
+            image 'alpine'
+            args '-u root:root'
+            label 'jarvis'
+        }
     }
-    stage("test") {
-      steps {
-        echo 'Hello World'
-      }
+    stages {
+        stage('Deps') {
+            steps {
+                sh 'apk add git go'
+                sh 'go get nhooyr.io/websocket'
+                sh 'go get github.com/google/uuid'
+            }
+        }
+        stage('Build server') {
+            steps {
+                sh 'cd server && go build'
+            }
+        }
     }
-    stage("deploy") {
-      steps {
-        echo 'Hello World'
-      }
-    }
-  }
 }
