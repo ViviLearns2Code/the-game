@@ -14,16 +14,26 @@ export class WelcomeUI extends PIXI.Container {
       input: {fontSize: '25px'},
       box: {fill: 0xEEEEEE}
     })
-    inputName.x = 50
-    inputName.y = 300
+    inputName.x = 25
+    inputName.y = 200
     inputName.placeholder = 'Player name...'
     this.addChild(inputName)
     inputName.focus()
 
+    var inputGameToken = new PIXITEXTINPUT.TextInput({
+      input: {fontSize: '25px'},
+      box: {fill: 0xEEEEEE}
+    })
+    inputGameToken.x = 400
+    inputGameToken.y = 200
+    inputGameToken.placeholder = 'Game token...'
+    this.addChild(inputGameToken)
+
+
     const hostButton = new PIXI.Text('Host New Game');
     this.addChild(hostButton);
-    hostButton.x = 50;
-    hostButton.y = 200;
+    hostButton.x = 25;
+    hostButton.y = 300;
 
     hostButton.interactive = true;
     hostButton.buttonMode = true;
@@ -43,6 +53,32 @@ export class WelcomeUI extends PIXI.Container {
       console.debug("sending: " + message)
       websocket.send(message);
     }
+
+    const joinButton = new PIXI.Text('Join New Game');
+    this.addChild(joinButton);
+    joinButton.x = 400;
+    joinButton.y = 300;
+
+    joinButton.interactive = true;
+    joinButton.buttonMode = true;
+    joinButton.on('pointerdown', onJoinButtonClick);
+    function onJoinButtonClick() {
+      if (inputName.text === "" || inputGameToken.text === "")
+        return;
+      var message = JSON.stringify(
+        {
+          "gameToken": inputGameToken.text,
+          "playerToken": "",
+          "actionId": "join",
+          "playerName": inputName.text,
+          "cardId": "",
+        }
+      );
+      console.debug("sending: " + message)
+      websocket.send(message);
+    }
+
+
     this.visible = false
   }
 
