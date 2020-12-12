@@ -21,28 +21,57 @@ func describe(i interface{}) {
 	log.Printf("(%v, %T)\n", i, i)
 }
 
+func cardsInHandOfPlayer(playerIdx int, cardsInHands map[int][]int) (cardsOfPlayer CardsOfPlayer){
+ cardsOfPlayer.cardsInHand=cardsInHands[playerIdx]
+ for playerId, cards := range cardsInHands{
+	 cardsOfPlayer.nrCardsOfOtherPlayers[playerId] = cap(cards)
+ }
+ return cardsOfPlayer
+}
 func (g *Game) Start() {
 	// loop
 	var subs = make(map[string]chan GameState)
-	var players = make(map[string]string)
-	var started = false
+	var players = make(map[int]string)
+	var cardsInHands = make(map[int][]int)
+	cardsOnTable := CardsOnTable{0, 0,0,0}
 	var err error
+	playerIdx := 1
 	for {
 		select {
 		case raw := <-g.inputCh:
 			describe(raw)
 			g.publishCh <- GameState{
-				g.token,
-				players,
-				started,
-				err,
+				gameToken:   g.token,
+				playerToken: raw.PlayerToken,
+				playerName:  raw.PlayerName,
+				playerId: playerIdx,
+				CardsOfPlayer: cardsInHandOfPlayer(playerIdx, cardsInHands),
+				CardsOnTable : cardsOnTable,
+				GameStateEvent: GameStateEvent{"", "", false, false,false,false},
+				ReadyEvents: ReadyEvents{"", 0,nil},
+				PlaceCardEvents: PlaceCardEvents{
+					name:          "",
+					triggeredBy:   0,
+					discardedCard: nil,
+				},
+				
+				ProcessingStarEvent:ProcessingStarEvent{
+					name:        "",
+					triggeredBy: 0,
+					proStar:     nil,
+					conStar:     nil,
+				},
+				playerNames: players,
+				err:         err,
 			}
+			playerIdx++
 		case subscriber := <-g.subCh:
-			if len(players) >= 4 || started {
-				err = errors.New("Cannot join game anymore")
+			if len(players) >= 4 {
+				err = errors.New("cannot join game anymore")
 				subscriber.playerChannel <- GameState{}
 			} else {
-				players[subscriber.playerToken] = subscriber.playerName
+				players[playerIdx] = subscriber.playerName
+				playerIdx++
 			}
 			subs[subscriber.playerToken] = subscriber.playerChannel
 		case subscriber := <-g.unsubCh:

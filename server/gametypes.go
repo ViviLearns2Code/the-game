@@ -38,9 +38,59 @@ type Game struct {
 	subCh     chan subscription
 	unsubCh   chan subscription
 }
+
+type CardsOnTable struct {
+	topCard int
+	level   int
+	lives   int
+	stars   int
+}
+
+type CardsOfPlayer struct{
+	cardsInHand []int
+	nrCardsOfOtherPlayers map[int]int
+}
+
+type ReadyEvents struct {
+	name string  // Lobby, Concentrate
+	triggeredBy int // playerId, 0 iff Lobby
+	ready []int // playerId
+}
+
+type PlaceCardEvents struct {
+	name string // PlacedCards, UsedStar
+	triggeredBy int // playerId, 0 iff UsedStar
+	discardedCard map[int]int // playerId to card number
+}
+
+type ProcessingStarEvent struct {
+	name string  // ProposeStar, AgreeStar, RejectStar
+	triggeredBy int
+	proStar []int
+	conStar []int
+}
+
+type GameStateEvent struct {
+	name string // GameOver, LifeLost, LevelUp
+	levelTitle string
+	starsIncrease bool
+	starsDecrease bool
+	livesIncrease bool
+	livesDecrease bool
+}
+
 type GameState struct {
-	gameToken      string
-	playerIdToName map[string]string
-	started        bool
-	err            error
+	gameToken   string
+	playerToken string
+	playerName  string
+	playerId int
+	CardsOfPlayer
+	playerNames map[int]string
+	CardsOnTable
+	// events
+	GameStateEvent
+	ReadyEvents
+	PlaceCardEvents
+	ProcessingStarEvent
+	err error
 }
