@@ -5,9 +5,9 @@ The stream of information between client and server is bidirectional. The commun
 The request json has a static structure, but fields can be null depending on the context.
 ```json
 {
-  "playerName": "bob", // uuid string
-  "playerToken": "1135dtr-ndtrn7365", // uuid string
-  "gameToken": "uiaoy12-46247dnr", // uuid string
+  "playerName": "bob",
+  "playerToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",,
+  "gameToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
   "actionId": "concentrate",
   "card": null
 }
@@ -27,7 +27,7 @@ Possible `actionIds`
 The response json has a static structure, but fields can be null depending on the context.
 
 | event | possible values |
-|:-----:|:---------------:|
+|:------|:----------------|
 |readyEvent| lobby, concentrate |
 |placeCardEvent| placeCard, useStar |
 |processStarEvent| proposeStar, agreeStar, rejectStar |
@@ -39,7 +39,7 @@ The response json has a static structure, but fields can be null depending on th
   "gameState": {
     "gameToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",
     "playerToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
-    "playerName": "Bla",
+    "playerName": "bob",
     "PlayerId": 1,
     "cardsOfPlayer": {
       "cardsInHand": [40, 53, 88],
