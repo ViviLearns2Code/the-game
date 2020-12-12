@@ -24,6 +24,10 @@ import (
 //var listenAddr = "192.168.178.23:4000" //localhost:4000
 var listenAddr string
 
+// Global map, protected by lock
+var mutex = &sync.RWMutex{}
+var gameMap = make(map[string]Game)
+
 func init() {
 	host, ok := os.LookupEnv("GAMEHOST")
 	if !ok {
@@ -48,6 +52,19 @@ func getLocalIP() string {
 		}
 	}
 	return ""
+}
+
+func getGameFromMap(gameToken string) (Game, bool) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	var val, ok = gameMap[gameToken]
+	return val, ok
+}
+
+func addGameToMap(gameToken string, game Game) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	gameMap[gameToken] = game
 }
 
 var rootTemplate = template.Must(template.New("root").Parse(`
@@ -105,23 +122,6 @@ func goid() int {
 		panic(fmt.Sprintf("cannot get goroutine id: %v", err))
 	}
 	return id
-}
-
-// Global map, protected by lock
-var mutex = &sync.RWMutex{}
-var gameMap = make(map[string]Game)
-
-func getGameFromMap(gameToken string) (Game, bool) {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	var val, ok = gameMap[gameToken]
-	return val, ok
-}
-
-func addGameToMap(gameToken string, game Game) {
-	mutex.Lock()
-	defer mutex.Unlock()
-	gameMap[gameToken] = game
 }
 
 func convertGameStateToOutput(gameState *GameState) GameOutput {
@@ -200,11 +200,11 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 		}
 		gameDetails := extractDetails(data)
 		log.Printf("Checking inputs...")
-		log.Printf("playerToken: %v", myPlayerToken)
-		log.Printf("playerName: %v", myPlayerName)
-		log.Printf("gameToken: %v", myGame.token)
-		log.Printf("actionId: %v", gameDetails.ActionId)
-		log.Printf("cardId: %v", gameDetails.CardId)
+		log.Printf("playerToken %v : %v", myPlayerToken, gameDetails.PlayerToken)
+		log.Printf("playerName %v : %v", myPlayerName, gameDetails.PlayerName)
+		log.Printf("gameToken %v : %v", myGame.token, gameDetails.GameToken)
+		log.Printf("actionId %v", gameDetails.ActionId)
+		log.Printf("cardId %v", gameDetails.CardId)
 		if gameDetails.PlayerName == "" {
 			c.Close(websocket.StatusUnsupportedData, "playerName corrupted")
 			return
@@ -221,6 +221,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			addGameToMap(myGame.token, myGame)
 			go myGame.Start()
 			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName)
+			gameDetails.PlayerToken = myPlayerToken
 			go listenPlayerChannel(c, ctx, myPlayerChannel)
 		case "join":
 			log.Printf("Joining game...")
@@ -232,7 +233,21 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			}
 			myPlayerName = gameDetails.PlayerName
 			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName)
+			gameDetails.PlayerToken = myPlayerToken
 			go listenPlayerChannel(c, ctx, myPlayerChannel)
+		case "leave":
+			log.Printf("Leaving game...")
+			_myGame, ok := getGameFromMap(gameDetails.GameToken)
+			myGame = _myGame
+			if !ok {
+				c.Close(websocket.StatusUnsupportedData, "GameToken corrupted")
+				return
+			}
+			if gameDetails.PlayerToken == "" {
+				c.Close(websocket.StatusUnsupportedData, "playerTokencorrupted")
+				return
+			}
+			myGame.Unsubscribe(myPlayerToken)
 		default:
 			if gameDetails.PlayerToken != myPlayerToken {
 				c.Close(websocket.StatusUnsupportedData, "playerToken corrupted")

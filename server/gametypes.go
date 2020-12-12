@@ -46,7 +46,7 @@ type Game struct {
 	inputCh   chan InputDetails
 	publishCh chan GameState
 	subCh     chan subscription
-	unsubCh   chan subscription
+	unsubCh   chan string
 }
 
 type CardsOnTable struct {

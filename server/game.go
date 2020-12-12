@@ -12,7 +12,7 @@ func NewGame() *Game {
 		inputCh:   make(chan InputDetails),
 		publishCh: make(chan GameState, 1),
 		subCh:     make(chan subscription, 1),
-		unsubCh:   make(chan subscription, 1),
+		unsubCh:   make(chan string, 1),
 	}
 }
 
@@ -20,8 +20,8 @@ func describe(i interface{}) {
 	log.Printf("(%v, %T)\n", i, i)
 }
 
-func cardsInHandOfPlayer(playerIdx int, cardsInHands map[int][]int) (cardsOfPlayer CardsOfPlayer) {
-	cardsOfPlayer.CardsInHand = cardsInHands[playerIdx]
+func cardsInHandOfPlayer(playerId int, cardsInHands map[int][]int) (cardsOfPlayer CardsOfPlayer) {
+	cardsOfPlayer.CardsInHand = cardsInHands[playerId]
 	for playerId, cards := range cardsInHands {
 		cardsOfPlayer.NrCardsOfOtherPlayers[playerId] = cap(cards)
 	}
@@ -30,20 +30,21 @@ func cardsInHandOfPlayer(playerIdx int, cardsInHands map[int][]int) (cardsOfPlay
 func (g *Game) Start() {
 	// loop
 	var subs = make(map[string]chan GameState)
-	var players = make(map[int]string)
+	var playerId2Name = make(map[int]string)
+	var playerToken2Id = make(map[string]int)
 	var cardsInHands = make(map[int][]int)
 	cardsOnTable := CardsOnTable{0, 0, 0, 0}
 	var err *gameError = nil
-	playerIdx := 1
+	nextPlayerId := 1
 	for {
 		select {
-		case raw := <-g.inputCh:
+		case inputDetails := <-g.inputCh:
 			g.publishCh <- GameState{
 				GameToken:      g.token,
-				PlayerToken:    raw.PlayerToken,
-				PlayerName:     raw.PlayerName,
-				PlayerId:       playerIdx,
-				CardsOfPlayer:  cardsInHandOfPlayer(playerIdx, cardsInHands),
+				PlayerToken:    inputDetails.PlayerToken,
+				PlayerName:     inputDetails.PlayerName,
+				PlayerId:       playerToken2Id[inputDetails.PlayerToken],
+				CardsOfPlayer:  cardsInHandOfPlayer(playerToken2Id[inputDetails.PlayerToken], cardsInHands),
 				CardsOnTable:   cardsOnTable,
 				GameStateEvent: GameStateEvent{"", "", false, false, false, false},
 				ReadyEvent:     ReadyEvent{"", 0, nil},
@@ -59,23 +60,24 @@ func (g *Game) Start() {
 					ProStar:     nil,
 					ConStar:     nil,
 				},
-				PlayerNames: players,
+				PlayerNames: playerId2Name,
 				err:         err,
 			}
 		case subscriber := <-g.subCh:
-			if len(players) >= 4 {
+			if len(playerId2Name) >= 4 {
 				var err = NewGameError("error", "cannot join game anymore")
 				subscriber.playerChannel <- GameState{
 					err: err,
 				}
 				return
 			} else {
-				players[playerIdx] = subscriber.playerName
-				playerIdx++
+				playerId2Name[nextPlayerId] = subscriber.playerName
+				playerToken2Id[subscriber.playerToken] = nextPlayerId
+				nextPlayerId++
 			}
 			subs[subscriber.playerToken] = subscriber.playerChannel
-		case subscriber := <-g.unsubCh:
-			delete(subs, subscriber.playerToken)
+		case playerToken := <-g.unsubCh:
+			delete(subs, playerToken)
 		case gameState := <-g.publishCh:
 			log.Printf("New game state published")
 			for _, playerChannel := range subs {
@@ -100,12 +102,8 @@ func (g *Game) Subscribe(playerName string) (string, chan GameState) {
 	return playerToken, playerChannel
 }
 
-func (g *Game) Unsubscribe(playerToken string, playerName string, playerChannel chan GameState) {
-	g.unsubCh <- subscription{
-		playerToken:   playerToken,
-		playerName:    playerName,
-		playerChannel: playerChannel,
-	}
+func (g *Game) Unsubscribe(playerToken string) {
+	g.unsubCh <- playerToken
 }
 
 func (g *Game) PublishState(gameState GameState) {
