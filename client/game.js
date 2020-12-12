@@ -48,9 +48,9 @@ export class GameUI extends PIXI.Container {
     this.proposeStarButton.buttonMode = true;
     this.proposeStarButton.on('pointerdown', onProposeStarButtonClick);
 
-    self = this
+    var self = this
     function onProposeStarButtonClick() {
-      websocket.send(JSON.stringify(
+      var text = JSON.stringify(
         {
           "gameToken": self.gameToken,
           "playerToken": self.playerToken,
@@ -58,7 +58,9 @@ export class GameUI extends PIXI.Container {
           "playerName": self.playerName,
           "cardId": "",
         }
-      ));
+      );
+      console.debug(text)
+      websocket.send(text);
     }
 
     const proposeConcentrationButton = new PIXI.Text('Prop. Concentration');
@@ -148,7 +150,6 @@ export class GameUI extends PIXI.Container {
     this.playerName = gameState.gameState.playerName;
     this.playerToken = gameState.gameState.playerToken;
     this.gameToken = gameState.gameState.gameToken;
-    console.debug(this.playerToken)
 
 
     this.levelText.text = "Level " + gameState.gameState.cardsOnTable.level;
@@ -168,6 +169,45 @@ export class GameUI extends PIXI.Container {
     this.playCardButton.visible = gameState.gameState.cardsOfPlayer.cardsInHand.length > 0;
 
     this.hand = gameState.gameState.cardsOfPlayer.cardsInHand;
+
+
+
+    if (gameState.gameState?.placeCardEvent?.name === "placeCard") {
+      var triggeredById = gameState.gameState.placeCardEvent.triggeredBy;
+      var cardPlayedText = new PIXI.Text('Player ' + gameState.gameState.playerNames[triggeredById] + ' played card ' + gameState.gameState.placeCardEvent.discardedCard);
+      cardPlayedText.anchor.set(0.5);
+      cardPlayedText.x = 400
+      cardPlayedText.y = 250
+      cardPlayedText.visible = false;
+      this.addChild(cardPlayedText);
+
+      self = this;
+      const coords = {scale: 0, pos_y: cardPlayedText.y}
+      var tweenShowCardPlayed = new TWEEN.Tween(coords)
+        .to({scale: 1, pos_y: cardPlayedText.y}, 250)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .onStart(()=>{
+          cardPlayedText.visible = true;
+        })
+        .onUpdate(() => {
+          cardPlayedText.scale.x = coords.scale;
+          cardPlayedText.scale.y = coords.scale;
+          cardPlayedText.y = coords.pos_y;
+        })
+        .start()
+      var tweenHideCardPlayed = new TWEEN.Tween(coords)
+        .to({scale: 0, pos_y: cardPlayedText.y + 100}, 2000)
+        .easing(TWEEN.Easing.Quadratic.In)
+        .onUpdate(() => {
+          cardPlayedText.scale.x = coords.scale;
+          cardPlayedText.scale.y = coords.scale;
+          cardPlayedText.y = coords.pos_y;
+        })
+        .onComplete(()=>{
+          self.removeChild(cardPlayedText);
+        })
+        tweenShowCardPlayed.chain(tweenHideCardPlayed);
+    }
   }
 
 }

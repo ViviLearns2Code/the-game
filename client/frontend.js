@@ -30,7 +30,6 @@ function parseGameStateGlobal(gameState) {
   testContainer.parseGameState(gameState);
 }
 
-
 websocket.onmessage = function (event) {
   console.log(event.data);
 

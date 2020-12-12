@@ -38,7 +38,7 @@ export class TestUI extends PIXI.Container {
         "errorMsg":"",
         "gameState":{
           "gameToken":"049281ac-104f-4e9b-9cc6-e494e61ecea2",
-          "playerToken":"",
+          "playerToken":"135ß098235token",
           "playerName":"Bla",
           "PlayerId":2,
           "cardsOfPlayer":{
@@ -46,7 +46,8 @@ export class TestUI extends PIXI.Container {
             "nrCardOfOtherPlayers":null
           },
           "playerNames":{
-            "1":"Bla"
+            "1":"Bla",
+            "2":"Phlegmon"
           },
           "cardsOnTable":{
             "topCard":0,
@@ -65,7 +66,7 @@ export class TestUI extends PIXI.Container {
           "readyEvent":{
             "name":"lobby",
             "triggeredBy":0,
-            "ready":null
+            "ready": [1]
           },
           "placeCardEvent":{
             "name":"",
@@ -132,6 +133,68 @@ export class TestUI extends PIXI.Container {
               "name": "",
               "triggeredBy": 0,
               "discardedCard": null
+            },
+            "processingStarEvent": {
+              "name": "",
+              "triggeredBy": 0,
+              "proStar": null,
+              "conStar": null
+            }
+          }
+        }
+      `;
+      jsonInjectCallback(JSON.parse(text))
+    }
+
+    const testb4 = new PIXI.Text('place card', style);
+    this.addChild(testb4);
+    testb4.y = 45;
+    testb4.interactive = true;
+    testb4.buttonMode = true;
+    testb4.on('pointerdown', onTestB4Click);
+    function onTestB4Click() {
+      var text = `
+        {
+          "errorMsg": "",
+          "gameState": {
+            "gameToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",
+            "playerToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
+            "playerName": "bob",
+            "PlayerId": 1,
+            "cardsOfPlayer": {
+              "cardsInHand": [40, 53, 88],
+              "nrCardOfOtherPlayers": {
+                "1": 3,
+                "2": 2
+              }
+            },
+            "playerNames": {
+              "1": "bob",
+              "2": "alice"
+            },
+            "cardsOnTable": {
+              "topCard": 10,
+              "level": 3,
+              "lives": 2,
+              "stars": 1
+            },
+            "gameStateEvent": {
+              "name": "",
+              "levelTitle": "",
+              "starsIncrease": false,
+              "starsDecrease": false,
+              "livesIncrease": false,
+              "livesDecrease": false
+            },
+            "readyEvent": {
+              "name": "",
+              "triggeredBy": 0,
+              "ready": null
+            },
+            "placeCardEvent": {
+              "name": "placeCard",
+              "triggeredBy": 2,
+              "discardedCard": 42
             },
             "processingStarEvent": {
               "name": "",
