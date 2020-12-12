@@ -22,7 +22,6 @@ pipeline {
                 sh 'cd server && ./server &'
                 sh 'sleep 3'
                 sh 'cd server && go test'
-                sh 'killall server'
             }
         }
     }
