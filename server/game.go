@@ -10,7 +10,7 @@ import (
 func NewGame() *Game {
 	return &Game{
 		token:     uuid.New().String(), //concurrent reads only!
-		inputCh:   make(chan inputDetails),
+		inputCh:   make(chan InputDetails),
 		publishCh: make(chan GameState, 1),
 		subCh:     make(chan subscription, 1),
 		unsubCh:   make(chan subscription, 1),

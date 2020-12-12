@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"net"
 	"net/http"
 	"runtime"
 	"strconv"
@@ -16,9 +17,25 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 
-// Add start action
-// Add leave action
 // Add unsubscribe if input checks fail
+// Add error handling
+
+func getLocalIP() string {
+	// GetLocalIP returns the non loopback local IP of the host
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, address := range addrs {
+		// check the address type and if it is not a loopback the display it
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
+}
 
 var rootTemplate = template.Must(template.New("root").Parse(`
 <!DOCTYPE html>
@@ -125,7 +142,8 @@ func isValidAction(actionId string) bool {
 	return false
 }
 
-const listenAddr = "192.168.178.23:4000" //localhost:4000
+//var listenAddr = "192.168.178.23:4000" //localhost:4000
+var listenAddr = fmt.Sprintf("%s:4000", getLocalIP())
 
 func main() {
 	log.Printf("hello server")
@@ -138,18 +156,18 @@ func main() {
 	}
 }
 
-func extractDetails(raw map[string]interface{}) inputDetails {
+func extractDetails(raw map[string]interface{}) InputDetails {
 	var gameToken, _ = raw["gameToken"].(string)
 	var playerToken, _ = raw["playerToken"].(string)
 	var playerName, _ = raw["playerName"].(string)
 	var actionId, _ = raw["actionId"].(string)
 	var cardId, _ = raw["card"].(int)
-	var details = inputDetails{
-		gameToken:   gameToken,
-		playerToken: playerToken,
-		playerName:  playerName,
-		actionId:    actionId,
-		cardId:      cardId,
+	var details = InputDetails{
+		GameToken:   gameToken,
+		PlayerToken: playerToken,
+		PlayerName:  playerName,
+		ActionId:    actionId,
+		CardId:      cardId,
 	}
 	return details
 }
@@ -184,21 +202,21 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 		log.Printf("playerToken: %v", myPlayerToken)
 		log.Printf("playerName: %v", myPlayerName)
 		log.Printf("gameToken: %v", myGame.token)
-		log.Printf("actionId: %v", gameDetails.actionId)
-		log.Printf("cardId: %v", gameDetails.cardId)
+		log.Printf("actionId: %v", gameDetails.ActionId)
+		log.Printf("cardId: %v", gameDetails.CardId)
 		log.Printf("Passing inputs to game core...")
-		if gameDetails.playerName == "" {
+		if gameDetails.PlayerName == "" {
 			c.Close(websocket.StatusUnsupportedData, "playerName corrupted")
 			return
 		}
-		if !isValidAction(gameDetails.actionId) {
+		if !isValidAction(gameDetails.ActionId) {
 			c.Close(websocket.StatusUnsupportedData, "actionId corrupted")
 			return
 		}
-		switch gameDetails.actionId {
+		switch gameDetails.ActionId {
 		case "create":
 			log.Printf("Creating game...")
-			myPlayerName = gameDetails.playerName
+			myPlayerName = gameDetails.PlayerName
 			myGame = *NewGame()
 			addGameToMap(myGame.token, myGame)
 			go myGame.Start()
@@ -206,25 +224,25 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			go listenPlayerChannel(c, ctx, myPlayerToken, myPlayerName, myPlayerChannel)
 		case "join":
 			log.Printf("Joining game...")
-			_myGame, ok := getGameFromMap(gameDetails.gameToken)
+			_myGame, ok := getGameFromMap(gameDetails.GameToken)
 			myGame = _myGame
 			if !ok {
 				c.Close(websocket.StatusUnsupportedData, "GameToken corrupted")
 				return
 			}
-			myPlayerName = gameDetails.playerName
+			myPlayerName = gameDetails.PlayerName
 			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName)
 			go listenPlayerChannel(c, ctx, myPlayerToken, myPlayerName, myPlayerChannel)
 		default:
-			if gameDetails.playerToken != myPlayerToken {
+			if gameDetails.PlayerToken != myPlayerToken {
 				c.Close(websocket.StatusUnsupportedData, "playerToken corrupted")
 				return
 			}
-			if gameDetails.gameToken != myGame.token {
+			if gameDetails.GameToken != myGame.token {
 				c.Close(websocket.StatusUnsupportedData, "gameToken corrupted")
 				return
 			}
-			if myPlayerName != gameDetails.playerName {
+			if myPlayerName != gameDetails.PlayerName {
 				c.Close(websocket.StatusUnsupportedData, "PlayerName corrupted")
 				return
 			}

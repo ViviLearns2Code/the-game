@@ -1,11 +1,12 @@
 package main
 
-type inputDetails struct {
-	gameToken   string
-	playerToken string
-	playerName  string
-	actionId    string
-	cardId      int
+// public for automatic test
+type InputDetails struct {
+	GameToken   string `json:"gameToken, omitempty"`
+	PlayerToken string `json:"playerToken, omitempty"`
+	PlayerName  string `json:"playerName, omitempty"`
+	ActionId    string `json:"actionId, omitempty"`
+	CardId      int    `json:"cardId, omitempty"`
 }
 
 type GameStateOutput struct {
@@ -32,7 +33,7 @@ type subscription struct {
 
 type Game struct {
 	token     string
-	inputCh   chan inputDetails
+	inputCh   chan InputDetails
 	publishCh chan GameState
 	subCh     chan subscription
 	unsubCh   chan subscription
