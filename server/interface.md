@@ -6,7 +6,7 @@ The request json has a static structure, but fields can be null depending on the
 ```json
 {
   "playerName": "bob",
-  "playerToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",,
+  "playerToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",
   "gameToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
   "actionId": "concentrate",
   "card": null
