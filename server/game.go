@@ -53,7 +53,7 @@ func (g *Game) Start() {
 					DiscardedCard: nil,
 				},
 
-				ProcessingStarEvent: ProcessingStarEvent{
+				ProcessStarEvent: ProcessStarEvent{
 					Name:        "",
 					TriggeredBy: 0,
 					ProStar:     nil,

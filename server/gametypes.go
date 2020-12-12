@@ -62,25 +62,25 @@ type CardsOfPlayer struct {
 }
 
 type ReadyEvent struct {
-	// Lobby, Concentrate
+	// lobby, concentrate
 	Name string `json:"name, omitempty"`
-	// playerId, 0 if Lobby
+	// playerId, 0 if lobby
 	TriggeredBy int `json:"triggeredBy, omitempty"`
 	// playerId
 	Ready []int `json:"ready, omitempty"`
 }
 
 type PlaceCardEvent struct {
-	// PlacedCards, UsedStar
+	// placeCard, useStar
 	Name string `json:"name, omitempty"`
-	// playerId, 0 if UsedStar
-	TriggeredBy int `json:"triggeredBy omitempty"`
+	// playerId, 0 if useStar
+	TriggeredBy int `json:"triggeredBy, omitempty"`
 	// playerId to card number
 	DiscardedCard map[int]int `json:"discardedCard, omitempty"`
 }
 
-type ProcessingStarEvent struct {
-	// ProposeStar, AgreeStar, RejectStar
+type ProcessStarEvent struct {
+	// proposeStar, agreeStar, rejectStar
 	Name        string `json:"name, omitempty"`
 	TriggeredBy int    `json:"triggeredBy, omitempty"`
 	ProStar     []int  `json:"proStar, omitempty"`
@@ -88,13 +88,13 @@ type ProcessingStarEvent struct {
 }
 
 type GameStateEvent struct {
-	// GameOver, LifeLost, LevelUp
+	// gameOver, lostLife, levelUp
 	Name          string `json:"name, omitempty"`
 	LevelTitle    string `json:"levelTitle, omitempty"`
 	StarsIncrease bool   `json:"starsIncrease, omitempty"`
 	StarsDecrease bool   `json:"starsDecrease, omitempty"`
 	LivesIncrease bool   `json:"livesIncrease, omitempty"`
-	LivesDecrease bool   `json:"LivesDecrease, omitempty"`
+	LivesDecrease bool   `json:"livesDecrease, omitempty"`
 }
 
 type GameState struct {
@@ -106,9 +106,9 @@ type GameState struct {
 	PlayerNames   map[int]string `json:"playerNames, omitempty"`
 	CardsOnTable  CardsOnTable   `json:"cardsOnTable, omitempty"`
 	// events
-	GameStateEvent      `json:"gameStateEvent, omitempty"`
-	ReadyEvent          `json:"readyEvent, omitempty"`
-	PlaceCardEvent      `json:"placeCardEvent, omitempty"`
-	ProcessingStarEvent `json:"processingStarEvent, omitempty"`
-	err                 *gameError
+	GameStateEvent   `json:"gameStateEvent, omitempty"`
+	ReadyEvent       `json:"readyEvent, omitempty"`
+	PlaceCardEvent   `json:"placeCardEvent, omitempty"`
+	ProcessStarEvent `json:"processStarEvent, omitempty"`
+	err              *gameError
 }
