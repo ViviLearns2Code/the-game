@@ -17,5 +17,13 @@ pipeline {
                 sh 'cd server && go build'
             }
         }
+        stage('Test server') {
+            steps {
+                sh 'cd server && ./server &'
+                sh 'sleep 3'
+                sh 'cd server && go test'
+                sh 'killall server'
+            }
+        }
     }
 }
