@@ -28,6 +28,7 @@ func TestServer(t *testing.T) {
 	}
 	defer c.Close(websocket.StatusInternalError, "the sky is falling")
 
+	// correct input
 	var payload_request = &InputDetails{
 		PlayerName: "mary",
 		ActionId:   "create",
@@ -43,6 +44,21 @@ func TestServer(t *testing.T) {
 		t.Fatal(err.Error())
 		return
 	}
-
+	// wrong input
+	payload_request = &InputDetails{
+		PlayerName: "mary",
+		ActionId:   "",
+	}
+	err = wsjson.Write(ctx, c, payload_request)
+	if err != nil {
+		t.Fatal(err.Error())
+		return
+	}
+	payload_response = &GameOutput{}
+	err = wsjson.Read(ctx, c, &payload_response)
+	if err == nil {
+		t.Fatal(err.Error())
+		return
+	}
 	c.Close(websocket.StatusNormalClosure, "")
 }

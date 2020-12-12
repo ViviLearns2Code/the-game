@@ -17,6 +17,7 @@ Possible `actionIds`
 * join
 * start
 * leave
+* card
 * concentrate
 * ready
 * propose-star
