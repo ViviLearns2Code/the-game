@@ -64,7 +64,7 @@ The response json has a static structure, but fields can be null depending on th
       "starsIncrease": false,
       "starsDecrease": false,
       "livesIncrease": false,
-      "LivesDecrease": false
+      "livesDecrease": false
     },
     "readyEvent": {
       "name": "",
