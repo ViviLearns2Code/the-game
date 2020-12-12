@@ -49,8 +49,8 @@ The response json has a static structure, but fields can be null depending on th
       }
     },
     "playerNames": {
-      "1": "Bla",
-      "2": "Blub"
+      "1": "bob",
+      "2": "alice"
     },
     "cardsOnTable": {
       "topCard": 10,
