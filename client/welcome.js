@@ -1,6 +1,8 @@
+import * as PIXI from './pixi.mjs';
+import * as PIXITEXTINPUT from './PIXI.TextInput.js';
 
-class WelcomeUI extends PIXI.Container {
-  constructor() {
+export class WelcomeUI extends PIXI.Container {
+  constructor(websocket) {
     super()
 
     const titleText = new PIXI.Text('The Game');
@@ -8,7 +10,7 @@ class WelcomeUI extends PIXI.Container {
     titleText.x = 50;
     titleText.y = 100;
 
-    var inputName = new PIXI.TextInput({
+    var inputName = new PIXITEXTINPUT.TextInput({
       input: {fontSize: '25px'},
       box: {fill: 0xEEEEEE}
     })
@@ -31,8 +33,11 @@ class WelcomeUI extends PIXI.Container {
         return;
       var message = JSON.stringify(
         {
+          "gameToken": "",
+          "playerToken": "",
           "actionId": "create",
           "playerName": inputName.text,
+          "cardId": "",
         }
       );
       console.debug("sending: " + message)
@@ -43,11 +48,11 @@ class WelcomeUI extends PIXI.Container {
 
   parseGameState(gameState) {
 
+    // Main switch animation
     var visibleBefore = this.targetVisible;
     this.targetVisible = !gameState.gameState;
 
     if (visibleBefore != this.targetVisible) {
-
       if (this.tween)
         this.tween.stop()
 
@@ -71,6 +76,8 @@ class WelcomeUI extends PIXI.Container {
         })
         .start()
     }
-
   }
 }
+
+//export default WelcomeUI;
+//export { WelcomeUI as default };

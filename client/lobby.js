@@ -1,6 +1,7 @@
+import * as PIXI from './pixi.mjs';
 
-class LobbyUI extends PIXI.Container {
-  constructor() {
+export class LobbyUI extends PIXI.Container {
+  constructor(websocket) {
     super()
 
     const titleText = new PIXI.Text('The Game\'s Lobby');
@@ -31,12 +32,47 @@ class LobbyUI extends PIXI.Container {
     function onReadyButtonClick() {
 
     }
+
+    this.visible = false
+    this.targetVisible = false
   }
 
   parseGameState(gameState) {
-    this.visible = false;//gameState.state == "lobby";
-    if (!this.visible)
+
+    // Main switch animation
+    var visibleBefore = this.targetVisible;
+    this.targetVisible = gameState.gameState?.readyEvent?.name === "lobby";
+
+    if (visibleBefore != this.targetVisible) {
+      if (this.tween)
+        this.tween.stop()
+
+      const coords = {scale: visibleBefore ? 1 : 0}
+
+      var self = this;
+      this.tween = new TWEEN.Tween(coords)
+        .to({scale: this.targetVisible ? 1 : 0}, 750)
+        .easing(TWEEN.Easing.Quadratic.In)
+        .onUpdate(() => {
+          self.scale.x = coords.scale;
+          self.scale.y = coords.scale;
+        })
+        .onStart(()=>{
+          if (this.targetVisible)
+            self.visible = true
+        })
+        .onComplete(()=>{
+          if (!this.targetVisible)
+            self.visible = false
+        })
+        .start()
+    }
+
+    if (!this.targetVisible)
       return
 
+
   }
+
+
 }

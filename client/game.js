@@ -1,6 +1,7 @@
+import * as PIXI from './pixi.mjs';
 
-class GameUI extends PIXI.Container {
-  constructor() {
+export class GameUI extends PIXI.Container {
+  constructor(websocket) {
     super()
 
     const titleText = new PIXI.Text('The Game');
@@ -33,28 +34,29 @@ class GameUI extends PIXI.Container {
     this.handText.x = 200;
     this.handText.y = 300;
 
-    /*joinButton.interactive = true;
-    joinButton.buttonMode = true;
-    joinButton.on('pointerdown', onJoinButtonClick);
-    function onJoinButtonClick() {
-
-    }*/
+    this.playerNames = new PIXI.Text('');
+    this.addChild(this.playerNames);
+    this.playerNames.x = 400;
+    this.playerNames.y = 100;
 
     this.proposeStarButton = new PIXI.Text('Prop. Star');
     this.addChild(this.proposeStarButton);
     this.proposeStarButton.x = 50;
-    this.proposeStarButton.y = 300;
+    this.proposeStarButton.y = 450;
 
     this.proposeStarButton.interactive = true;
     this.proposeStarButton.buttonMode = true;
     this.proposeStarButton.on('pointerdown', onProposeStarButtonClick);
+
+    self = this
     function onProposeStarButtonClick() {
       websocket.send(JSON.stringify(
         {
+          "gameToken": self.gameToken,
+          "playerToken": self.playerToken,
           "actionId": "propose-star",
-          "gameId": gameId,
-          "playerId": playerId,
-          "playerName": playerName
+          "playerName": self.playerName,
+          "cardId": "",
         }
       ));
     }
@@ -68,14 +70,17 @@ class GameUI extends PIXI.Container {
     proposeConcentrationButton.buttonMode = true;
     proposeConcentrationButton.on('pointerdown', onProposeConcentrationButtonClick);
     function onProposeConcentrationButtonClick() {
-      websocket.send(JSON.stringify(
+      var text = JSON.stringify(
         {
+          "gameToken": self.gameToken,
+          "playerToken": self.playerToken,
           "actionId": "concentrate",
-          "gameId": gameId,
-          "playerId": playerId,
-          "playerName": playerName
+          "playerName": self.playerName,
+          "cardId": "",
         }
-      ));
+      )
+      console.debug(text)
+      websocket.send(text);
     }
 
     this.playCardButton = new PIXI.Text('Play card');
@@ -89,11 +94,11 @@ class GameUI extends PIXI.Container {
     function onPlayCardButtonClick() {
       var message = JSON.stringify(
         {
+          "gameToken": self.gameToken,
+          "playerToken": self.playerToken,
           "actionId": "card",
-          "card": String(this.hand[0]),
-          "gameId": gameId,
-          "playerId": playerId,
-          "playerName": playerName
+          "playerName": self.playerName,
+          "cardId": this.hand[0],
         }
       );
       console.debug(message)
@@ -106,8 +111,10 @@ class GameUI extends PIXI.Container {
 
   parseGameState(gameState) {
 
+    // Main switch animation
     var visibleBefore = this.targetVisible;
-    this.targetVisible = gameState.gameState;
+    this.targetVisible = (gameState.gameState?.readyEvent)
+                         && (gameState.gameState?.readyEvent?.name !== "lobby");
 
     if (visibleBefore != this.targetVisible) {
 
@@ -138,19 +145,30 @@ class GameUI extends PIXI.Container {
     if (!this.targetVisible)
       return
 
+    this.playerName = gameState.gameState.playerName;
+    this.playerToken = gameState.gameState.playerToken;
+    this.gameToken = gameState.gameState.gameToken;
+    console.debug(this.playerToken)
 
-    this.levelText.text = "Level " + gameState.gameState.level;
-    this.livesText.text = "Lives " + gameState.gameState.lives;
-    this.starsText.text = "Stars " + gameState.gameState.stars;
-    this.topCardText.text = "TopCard " + gameState.gameState.topCard;
-    this.handText.text = "Hand " + gameState.gameState.hand;
 
-    this.proposeStarButton.visible = gameState.gameState.stars > 0;
-    this.playCardButton.visible = gameState.gameState.hand.length > 0;
+    this.levelText.text = "Level " + gameState.gameState.cardsOnTable.level;
+    this.livesText.text = "Lives " + gameState.gameState.cardsOnTable.lives;
+    this.starsText.text = "Stars " + gameState.gameState.cardsOnTable.stars;
+    this.topCardText.text = "TopCard " + gameState.gameState.cardsOnTable.topCard;
+    this.handText.text = "Hand " + gameState.gameState.cardsOfPlayer.cardsInHand;
 
-    this.hand = gameState.gameState.hand;
+    this.playerNames.text = ""
+    for (const [key, value] of Object.entries(gameState.gameState.playerNames)) {
+      this.playerNames.text += value
+      this.playerNames.text += "(" + gameState.gameState.cardsOfPlayer.nrCardOfOtherPlayers[key] + " cards)"
+      this.playerNames.text += "\n"
+    }
 
-    console.debug(this.hand)
+    this.proposeStarButton.visible = gameState.gameState.cardsOnTable.stars > 0;
+    this.playCardButton.visible = gameState.gameState.cardsOfPlayer.cardsInHand.length > 0;
+
+    this.hand = gameState.gameState.cardsOfPlayer.cardsInHand;
   }
 
 }
+
