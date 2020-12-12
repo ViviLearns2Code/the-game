@@ -23,18 +23,24 @@ func TestServer(t *testing.T) {
 
 	c, _, err := websocket.Dial(ctx, wsAddress, nil)
 	if err != nil {
-		t.Error(err.Error())
+		t.Fatal(err.Error())
 		return
 	}
 	defer c.Close(websocket.StatusInternalError, "the sky is falling")
 
-	var payload = &InputDetails{
+	var payload_request = &InputDetails{
 		PlayerName: "mary",
-		ActionId:   "",
+		ActionId:   "create",
 	}
-	err = wsjson.Write(ctx, c, payload)
+	err = wsjson.Write(ctx, c, payload_request)
 	if err != nil {
-		t.Error(err.Error())
+		t.Fatal(err.Error())
+		return
+	}
+	var payload_response = &GameOutput{}
+	err = wsjson.Read(ctx, c, &payload_response)
+	if err != nil {
+		t.Fatal(err.Error())
 		return
 	}
 

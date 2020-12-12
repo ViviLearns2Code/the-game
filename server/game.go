@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"log"
 
 	"github.com/google/uuid"
@@ -21,54 +20,55 @@ func describe(i interface{}) {
 	log.Printf("(%v, %T)\n", i, i)
 }
 
-func cardsInHandOfPlayer(playerIdx int, cardsInHands map[int][]int) (cardsOfPlayer CardsOfPlayer){
- cardsOfPlayer.cardsInHand=cardsInHands[playerIdx]
- for playerId, cards := range cardsInHands{
-	 cardsOfPlayer.nrCardsOfOtherPlayers[playerId] = cap(cards)
- }
- return cardsOfPlayer
+func cardsInHandOfPlayer(playerIdx int, cardsInHands map[int][]int) (cardsOfPlayer CardsOfPlayer) {
+	cardsOfPlayer.CardsInHand = cardsInHands[playerIdx]
+	for playerId, cards := range cardsInHands {
+		cardsOfPlayer.NrCardsOfOtherPlayers[playerId] = cap(cards)
+	}
+	return cardsOfPlayer
 }
 func (g *Game) Start() {
 	// loop
 	var subs = make(map[string]chan GameState)
 	var players = make(map[int]string)
 	var cardsInHands = make(map[int][]int)
-	cardsOnTable := CardsOnTable{0, 0,0,0}
-	var err error
+	cardsOnTable := CardsOnTable{0, 0, 0, 0}
+	var err *gameError = nil
 	playerIdx := 1
 	for {
 		select {
 		case raw := <-g.inputCh:
-			describe(raw)
 			g.publishCh <- GameState{
-				gameToken:   g.token,
-				playerToken: raw.PlayerToken,
-				playerName:  raw.PlayerName,
-				playerId: playerIdx,
-				CardsOfPlayer: cardsInHandOfPlayer(playerIdx, cardsInHands),
-				CardsOnTable : cardsOnTable,
-				GameStateEvent: GameStateEvent{"", "", false, false,false,false},
-				ReadyEvents: ReadyEvents{"", 0,nil},
-				PlaceCardEvents: PlaceCardEvents{
-					name:          "",
-					triggeredBy:   0,
-					discardedCard: nil,
+				GameToken:      g.token,
+				PlayerToken:    raw.PlayerToken,
+				PlayerName:     raw.PlayerName,
+				PlayerId:       playerIdx,
+				CardsOfPlayer:  cardsInHandOfPlayer(playerIdx, cardsInHands),
+				CardsOnTable:   cardsOnTable,
+				GameStateEvent: GameStateEvent{"", "", false, false, false, false},
+				ReadyEvent:     ReadyEvent{"", 0, nil},
+				PlaceCardEvent: PlaceCardEvent{
+					Name:          "",
+					TriggeredBy:   0,
+					DiscardedCard: nil,
 				},
-				
-				ProcessingStarEvent:ProcessingStarEvent{
-					name:        "",
-					triggeredBy: 0,
-					proStar:     nil,
-					conStar:     nil,
+
+				ProcessingStarEvent: ProcessingStarEvent{
+					Name:        "",
+					TriggeredBy: 0,
+					ProStar:     nil,
+					ConStar:     nil,
 				},
-				playerNames: players,
+				PlayerNames: players,
 				err:         err,
 			}
-			playerIdx++
 		case subscriber := <-g.subCh:
 			if len(players) >= 4 {
-				err = errors.New("cannot join game anymore")
-				subscriber.playerChannel <- GameState{}
+				var err = NewGameError("error", "cannot join game anymore")
+				subscriber.playerChannel <- GameState{
+					err: err,
+				}
+				return
 			} else {
 				players[playerIdx] = subscriber.playerName
 				playerIdx++

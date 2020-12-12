@@ -30,6 +30,7 @@ func init() {
 		host = getLocalIP()
 	}
 	listenAddr = fmt.Sprintf("%s:4000", host)
+	log.Printf("Listening on %s", listenAddr)
 }
 
 func getLocalIP() string {
@@ -91,7 +92,7 @@ Card Id <input id="card-id"/></br>
 `))
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("main", goid())
+	log.Println("main", goid())
 	rootTemplate.Execute(w, listenAddr)
 }
 
@@ -123,19 +124,10 @@ func addGameToMap(gameToken string, game Game) {
 	gameMap[gameToken] = game
 }
 
-func convertGameStateToOutput(gameState GameState, playerToken string, playerName string) GameOutput {
-	var gameStateOutput = GameStateOutput{
-		TopCard: 12,
-		Level:   2,
-		Lives:   3,
-		Stars:   3,
-		Hand:    []int{20, 45, 88},
-	}
+func convertGameStateToOutput(gameState *GameState) GameOutput {
 	var gameOutput = GameOutput{
-		GameToken:   gameState.gameToken,
-		PlayerToken: playerToken,
-		PlayerName:  playerName,
-		GameState:   &gameStateOutput,
+		GameState: gameState,
+		ErrorMsg:  "",
 	}
 	return gameOutput
 }
@@ -156,7 +148,7 @@ func isValidAction(actionId string) bool {
 
 func main() {
 	log.Printf("hello server")
-	fmt.Println("main", goid())
+	log.Println("main", goid())
 	http.HandleFunc("/", rootHandler)
 	http.Handle("/socket", http.HandlerFunc(runGame))
 	err := http.ListenAndServe(listenAddr, nil)
@@ -229,7 +221,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			addGameToMap(myGame.token, myGame)
 			go myGame.Start()
 			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName)
-			go listenPlayerChannel(c, ctx, myPlayerToken, myPlayerName, myPlayerChannel)
+			go listenPlayerChannel(c, ctx, myPlayerChannel)
 		case "join":
 			log.Printf("Joining game...")
 			_myGame, ok := getGameFromMap(gameDetails.GameToken)
@@ -240,7 +232,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			}
 			myPlayerName = gameDetails.PlayerName
 			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName)
-			go listenPlayerChannel(c, ctx, myPlayerToken, myPlayerName, myPlayerChannel)
+			go listenPlayerChannel(c, ctx, myPlayerChannel)
 		default:
 			if gameDetails.PlayerToken != myPlayerToken {
 				c.Close(websocket.StatusUnsupportedData, "playerToken corrupted")
@@ -259,7 +251,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 		myGame.inputCh <- gameDetails
 	}
 }
-func listenPlayerChannel(c *websocket.Conn, ctx context.Context, playerToken string, playerName string, myPlayerChannel chan GameState) {
+func listenPlayerChannel(c *websocket.Conn, ctx context.Context, myPlayerChannel chan GameState) {
 	var err error
 	log.Printf("Player channel opened...")
 	for {
@@ -269,7 +261,7 @@ func listenPlayerChannel(c *websocket.Conn, ctx context.Context, playerToken str
 			return
 		}
 		log.Printf("New game state received")
-		output := convertGameStateToOutput(gameState, playerToken, playerName)
+		output := convertGameStateToOutput(&gameState)
 		err = wsjson.Write(ctx, c, output)
 		if err != nil {
 			c.Close(websocket.StatusInternalError, err.Error())
