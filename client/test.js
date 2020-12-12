@@ -208,6 +208,68 @@ export class TestUI extends PIXI.Container {
       jsonInjectCallback(JSON.parse(text))
     }
 
+    const testb5 = new PIXI.Text('game over', style);
+    this.addChild(testb5);
+    testb5.y = 60;
+    testb5.interactive = true;
+    testb5.buttonMode = true;
+    testb5.on('pointerdown', onTestB5Click);
+    function onTestB5Click() {
+      var text = `
+        {
+          "errorMsg": "",
+          "gameState": {
+            "gameToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",
+            "playerToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
+            "playerName": "bob",
+            "PlayerId": 1,
+            "cardsOfPlayer": {
+              "cardsInHand": [40, 53, 88],
+              "nrCardOfOtherPlayers": {
+                "1": 3,
+                "2": 2
+              }
+            },
+            "playerNames": {
+              "1": "bob",
+              "2": "alice"
+            },
+            "cardsOnTable": {
+              "topCard": 10,
+              "level": 3,
+              "lives": 2,
+              "stars": 1
+            },
+            "gameStateEvent": {
+              "name": "gameOver",
+              "levelTitle": "",
+              "starsIncrease": false,
+              "starsDecrease": false,
+              "livesIncrease": false,
+              "livesDecrease": false
+            },
+            "readyEvent": {
+              "name": "",
+              "triggeredBy": 0,
+              "ready": null
+            },
+            "placeCardEvent": {
+              "name": "",
+              "triggeredBy": 2,
+              "discardedCard": null
+            },
+            "processingStarEvent": {
+              "name": "",
+              "triggeredBy": 0,
+              "proStar": null,
+              "conStar": null
+            }
+          }
+        }
+      `;
+      jsonInjectCallback(JSON.parse(text))
+    }
+
   }
 
   parseGameState(gameState) {

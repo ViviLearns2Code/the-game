@@ -1,4 +1,5 @@
 import * as PIXI from './pixi.mjs';
+"use strict";
 
 export class GameUI extends PIXI.Container {
   constructor(websocket) {
@@ -181,7 +182,7 @@ export class GameUI extends PIXI.Container {
       cardPlayedText.visible = false;
       this.addChild(cardPlayedText);
 
-      self = this;
+      var self = this;
       const coords = {scale: 0, pos_y: cardPlayedText.y}
       var tweenShowCardPlayed = new TWEEN.Tween(coords)
         .to({scale: 1, pos_y: cardPlayedText.y}, 250)
@@ -208,6 +209,51 @@ export class GameUI extends PIXI.Container {
         })
         tweenShowCardPlayed.chain(tweenHideCardPlayed);
     }
+
+    if (gameState.gameState?.gameStateEvent?.name === "gameOver") {
+      const skewStyle = new PIXI.TextStyle({
+        fontFamily: 'Arial',
+        dropShadow: true,
+        dropShadowAlpha: 0.8,
+        dropShadowAngle: 2.1,
+        dropShadowBlur: 4,
+        dropShadowColor: "0x111111",
+        dropShadowDistance: 10,
+        fill: ['#ffffff'],
+        stroke: '#ff0000', //'#004620',
+        fontSize: 40,
+        fontWeight: "lighter",
+        lineJoin: "round",
+        strokeThickness: 12
+      });
+
+      var gameOverText = new PIXI.Text('Big fail. You not in sync. Totally wrong. >:(', skewStyle);
+      gameOverText.anchor.set(0.5);
+      gameOverText.x = 400
+      gameOverText.y = 250
+      gameOverText.visible = false;
+      this.addChild(gameOverText);
+
+      var self = this;
+
+      const coords = {scale: 0, pos_y: gameOverText.y}
+      var tweenShowGameOver = new TWEEN.Tween(coords)
+        .to({scale: 1.0, pos_y: gameOverText.y}, 15000)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .onStart(()=>{
+          gameOverText.visible = true;
+        })
+        .onUpdate(() => {
+          gameOverText.scale.x = coords.scale;
+          gameOverText.scale.y = coords.scale;
+          gameOverText.y = coords.pos_y;
+        })
+        .onComplete(()=>{
+          self.removeChild(gameOverText);
+        })
+        .start()
+    }
+
   }
 
 }
