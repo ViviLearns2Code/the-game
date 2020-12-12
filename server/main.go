@@ -228,7 +228,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			_myGame, ok := getGameFromMap(gameDetails.GameToken)
 			myGame = _myGame
 			if !ok {
-				c.Close(websocket.StatusUnsupportedData, "GameToken corrupted")
+				c.Close(websocket.StatusUnsupportedData, "gameToken corrupted")
 				return
 			}
 			myPlayerName = gameDetails.PlayerName
@@ -240,11 +240,11 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			_myGame, ok := getGameFromMap(gameDetails.GameToken)
 			myGame = _myGame
 			if !ok {
-				c.Close(websocket.StatusUnsupportedData, "GameToken corrupted")
+				c.Close(websocket.StatusUnsupportedData, "gameToken corrupted")
 				return
 			}
 			if gameDetails.PlayerToken == "" {
-				c.Close(websocket.StatusUnsupportedData, "playerTokencorrupted")
+				c.Close(websocket.StatusUnsupportedData, "playerToken corrupted")
 				return
 			}
 			myGame.Unsubscribe(myPlayerToken)
@@ -258,7 +258,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if myPlayerName != gameDetails.PlayerName {
-				c.Close(websocket.StatusUnsupportedData, "PlayerName corrupted")
+				c.Close(websocket.StatusUnsupportedData, "playerName corrupted")
 				return
 			}
 		}

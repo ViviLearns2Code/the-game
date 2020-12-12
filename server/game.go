@@ -33,9 +33,9 @@ func (g *Game) Start() {
 	var playerId2Name = make(map[int]string)
 	var playerToken2Id = make(map[string]int)
 	var cardsInHands = make(map[int][]int)
-	cardsOnTable := CardsOnTable{0, 0, 0, 0}
+	var cardsOnTable = CardsOnTable{0, 0, 0, 0}
 	var err *gameError = nil
-	nextPlayerId := 1
+	var nextPlayerId = 1
 	for {
 		select {
 		case inputDetails := <-g.inputCh:
@@ -76,8 +76,8 @@ func (g *Game) Start() {
 				nextPlayerId++
 			}
 			subs[subscriber.playerToken] = subscriber.playerChannel
-		case playerToken := <-g.unsubCh:
-			delete(subs, playerToken)
+		case <-g.unsubCh:
+			//trigger gameOver
 		case gameState := <-g.publishCh:
 			log.Printf("New game state published")
 			for _, playerChannel := range subs {
