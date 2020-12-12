@@ -32,7 +32,7 @@ export class LobbyUI extends PIXI.Container {
         {
           "gameToken": self.gameToken,
           "playerToken": self.playerToken,
-          "actionId": "ready",
+          "actionId": "start",
           "playerName": self.playerName,
           "cardId": "",
         }
