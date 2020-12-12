@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -19,6 +20,17 @@ import (
 
 // Add unsubscribe if input checks fail
 // Add error handling
+
+//var listenAddr = "192.168.178.23:4000" //localhost:4000
+var listenAddr string
+
+func init() {
+	host, ok := os.LookupEnv("GAMEHOST")
+	if !ok {
+		host = getLocalIP()
+	}
+	listenAddr = fmt.Sprintf("%s:4000", host)
+}
 
 func getLocalIP() string {
 	// GetLocalIP returns the non loopback local IP of the host
@@ -142,9 +154,6 @@ func isValidAction(actionId string) bool {
 	return false
 }
 
-//var listenAddr = "192.168.178.23:4000" //localhost:4000
-var listenAddr = fmt.Sprintf("%s:4000", getLocalIP())
-
 func main() {
 	log.Printf("hello server")
 	fmt.Println("main", goid())
@@ -204,7 +213,6 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 		log.Printf("gameToken: %v", myGame.token)
 		log.Printf("actionId: %v", gameDetails.ActionId)
 		log.Printf("cardId: %v", gameDetails.CardId)
-		log.Printf("Passing inputs to game core...")
 		if gameDetails.PlayerName == "" {
 			c.Close(websocket.StatusUnsupportedData, "playerName corrupted")
 			return
@@ -247,6 +255,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		log.Printf("Passing inputs to game core...")
 		myGame.inputCh <- gameDetails
 	}
 }

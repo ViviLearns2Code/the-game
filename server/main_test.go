@@ -13,7 +13,7 @@ import (
 
 func TestServer(t *testing.T) {
 	var wsAddress string
-	host, ok := os.LookupEnv("HOST")
+	host, ok := os.LookupEnv("GAMEHOST")
 	if !ok {
 		host = getLocalIP()
 	}
@@ -30,7 +30,7 @@ func TestServer(t *testing.T) {
 
 	var payload = &InputDetails{
 		PlayerName: "mary",
-		ActionId:   "create",
+		ActionId:   "",
 	}
 	err = wsjson.Write(ctx, c, payload)
 	if err != nil {
