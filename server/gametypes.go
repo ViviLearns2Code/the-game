@@ -41,10 +41,30 @@ type subscription struct {
 	playerChannel chan GameState
 }
 
+type LevelCard struct {
+	levelTitle  string
+	lifeAsBonus bool
+	starAsBonus bool
+}
+
+type CardsManager struct {
+	cardsInHands map[int][]int
+	CardsOnTable
+	levelCards     map[int]LevelCard
+	discardedCards map[int]int
+}
+
+type GameManager struct {
+	playerId2Token map[string]int            // token to int
+	subs           map[string]chan GameState // token to channel
+	started        bool
+	CardsManager
+}
+
 type Game struct {
 	token     string
 	inputCh   chan InputDetails
-	publishCh chan GameState
+	publishCh chan bool
 	subCh     chan subscription
 	unsubCh   chan string
 }
