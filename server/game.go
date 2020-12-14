@@ -13,7 +13,7 @@ func (g *Game) Start() {
 	// loop
 	var manager = NewGameManager()
 	var gameState = NewGameState(g.token)
-	nextPlayerId := 1
+	nextPlayerID := 1
 	for {
 		select {
 		case inputDetails := <-g.inputCh:
@@ -28,10 +28,10 @@ func (g *Game) Start() {
 					err: err,
 				}
 			} else {
-				gameState.PlayerNames[nextPlayerId] = subscriber.playerName
-				manager.playerId2Token[subscriber.playerToken] = nextPlayerId
+				gameState.PlayerNames[nextPlayerID] = subscriber.playerName
+				manager.playerId2Token[subscriber.playerToken] = nextPlayerID
 				manager.subs[subscriber.playerToken] = subscriber.playerChannel
-				nextPlayerId++
+				nextPlayerID++
 				g.publishCh <- true
 			}
 		case <-g.unsubCh:
@@ -79,23 +79,26 @@ func NewGameManager() *GameManager {
 		playerId2Token: nil,
 		subs:           nil,
 		started:        false,
-		CardsManager:   nil,
+		CardsManager: CardsManager{cardsInHands: nil,
+			CardsOnTable:   CardsOnTable{0, 0, 0, 0},
+			levelCards:     nil,
+			discardedCards: nil},
 	}
 }
 
 func NewGameState(gt string) *GameState {
 	return &GameState{
 		GameToken:        gt,
-		PlayerToken:      nil,
-		PlayerName:       nil,
-		PlayerId:         nil,
-		CardsOfPlayer:    nil,
+		PlayerToken:      "",
+		PlayerName:       "",
+		PlayerId:         0,
+		CardsOfPlayer:    CardsOfPlayer{CardsInHand: nil, NrCardsOfOtherPlayers: nil},
 		PlayerNames:      nil,
-		CardsOnTable:     CardsOnTable{0, 0, 0, 0},
-		GameStateEvent:   GameStateEvent{"", "", false, false, false, false},
-		ReadyEvent:       ReadyEvent{"lobby", 0, nil},
-		PlaceCardEvent:   nil,
-		ProcessStarEvent: nil,
+		CardsOnTable:     CardsOnTable{TopCard: 0, Level: 0, Lives: 0, Stars: 0},
+		GameStateEvent:   GameStateEvent{Name: "", LevelTitle: "", StarsIncrease: false, StarsDecrease: false, LivesIncrease: false, LivesDecrease: false},
+		ReadyEvent:       ReadyEvent{Name: "lobby", TriggeredBy: 0, Ready: nil},
+		PlaceCardEvent:   PlaceCardEvent{Name: "", TriggeredBy: 0, DiscardedCard: nil},
+		ProcessStarEvent: ProcessStarEvent{Name: "", TriggeredBy: 0, ProStar: nil, ConStar: nil},
 		err:              nil,
 	}
 }

@@ -117,6 +117,7 @@ type GameStateEvent struct {
 	LivesDecrease bool   `json:"livesDecrease, omitempty"`
 }
 
+// GameState per Player
 type GameState struct {
 	GameToken     string         `json:"gameToken"`
 	PlayerToken   string         `json:"playerToken"`
