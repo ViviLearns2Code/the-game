@@ -80,7 +80,7 @@ func NewGameManager() *GameManager {
 		subs:           nil,
 		started:        false,
 		CardsManager: CardsManager{cardsInHands: nil,
-			CardsOnTable:   CardsOnTable{0, 0, 0, 0},
+			CardsOnTable:   CardsOnTable{TopCard: 0, Level: 0, Lives: 0, Stars: 0},
 			levelCards:     nil,
 			discardedCards: nil},
 	}
@@ -105,7 +105,8 @@ func NewGameState(gt string) *GameState {
 
 func actionCheck(inputDetails InputDetails, gameState *GameState) bool {
 	if gameState.ReadyEvent.Name != "" {
-		if (inputDetails.ActionId != "start") || (inputDetails.ActionId != "ready") {
+		x0 := inputDetails.ActionId != "start"
+		if x0 || inputDetails.ActionId != "ready" {
 			gameState.err = NewGameError("warning", "wrong action:  game is not started or is in concentration")
 			return false
 		}
@@ -119,7 +120,8 @@ func actionCheck(inputDetails InputDetails, gameState *GameState) bool {
 		}
 	}
 	if gameState.ProcessStarEvent.Name == "agreeStar" {
-		if (inputDetails.ActionId != "reject-Star") || (inputDetails.ActionId != "agree-star") {
+		x0 := inputDetails.ActionId != "reject-Star"
+		if x0 || inputDetails.ActionId != "agree-star" {
 			gameState.err = NewGameError("warning", "wrong action:  star is proposed, agree/reject star action is expected")
 			return false
 		}
@@ -348,8 +350,8 @@ func convertFromGameManagerToChannelOutput(communicator *GameManager, game *Game
 }
 func cardsInHandOfPlayer(playerIdx int, cardsInHands map[int][]int) (cardsOfPlayer CardsOfPlayer) {
 	cardsOfPlayer.CardsInHand = cardsInHands[playerIdx]
-	for playerId, cards := range cardsInHands {
-		cardsOfPlayer.NrCardsOfOtherPlayers[playerId] = cap(cards)
+	for playerID, cards := range cardsInHands {
+		cardsOfPlayer.NrCardsOfOtherPlayers[playerID] = cap(cards)
 	}
 	return cardsOfPlayer
 }
