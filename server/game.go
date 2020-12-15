@@ -10,7 +10,7 @@ import (
 )
 
 func (g *Game) Start() {
-	// loop
+	// game loop
 	var manager = newGameManager()
 	var gameState = newGameState(g.token)
 	nextPlayerID := 1
@@ -22,6 +22,7 @@ func (g *Game) Start() {
 				gameLogicBasedOnAction(inputDetails, manager, gameState)
 			}
 			convertFromGameManagerToChannelOutput(manager, gameState)
+			// TODO: return from this game's goroutine/loop after gameover event!
 			gameState.updateEventsAfterProcessedEvent(manager.started)
 		case subscriber := <-g.subCh:
 			log.Printf("subscriber := <-g.subCh")
