@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-playground/assert/v2"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
@@ -56,9 +57,10 @@ func TestServer(t *testing.T) {
 	}
 	payloadResponse = &GameOutput{}
 	err = wsjson.Read(ctx, c, &payloadResponse)
-	if err == nil {
+	if err != nil {
 		t.Fatal(err.Error())
 		return
 	}
+	assert.NotEqual(t, payloadResponse.ErrorMsg, "")
 	c.Close(websocket.StatusNormalClosure, "")
 }
