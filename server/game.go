@@ -343,11 +343,7 @@ func convertFromGameManagerToChannelOutput(communicator *GameManager, game *Game
 		game.PlayerName = game.PlayerNames[game.PlayerId]
 		game.CardsOfPlayer = cardsInHandOfPlayer(game.PlayerId, communicator.cardsInHands)
 		game.CardsOnTable = communicator.CardsOnTable
-		select {
-		case playerChannel <- *game:
-			// handled by goroutine in main.go
-		default:
-		}
+		playerChannel <- *game
 	}
 }
 func cardsInHandOfPlayer(playerIdx int, cardsInHands map[int][]int) (cardsOfPlayer CardsOfPlayer) {
