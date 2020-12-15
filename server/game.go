@@ -11,8 +11,8 @@ import (
 
 func (g *Game) Start() {
 	// loop
-	var manager = NewGameManager()
-	var gameState = NewGameState(g.token)
+	var manager = newGameManager()
+	var gameState = newGameState(g.token)
 	nextPlayerID := 1
 	for {
 		select {
@@ -29,7 +29,7 @@ func (g *Game) Start() {
 				}
 			} else {
 				gameState.PlayerNames[nextPlayerID] = subscriber.playerName
-				manager.playerId2Token[subscriber.playerToken] = nextPlayerID
+				manager.playerTokenToID[subscriber.playerToken] = nextPlayerID
 				manager.subs[subscriber.playerToken] = subscriber.playerChannel
 				nextPlayerID++
 				g.publishCh <- true
@@ -74,31 +74,31 @@ func (g *Game) Unsubscribe(playerToken string) {
 	g.unsubCh <- playerToken
 }
 
-func NewGameManager() *GameManager {
+func newGameManager() *GameManager {
 	return &GameManager{
-		playerId2Token: nil,
-		subs:           nil,
-		started:        false,
-		CardsManager: CardsManager{cardsInHands: nil,
+		playerTokenToID: make(map[string]int),
+		subs:            make(map[string]chan GameState),
+		started:         false,
+		CardsManager: CardsManager{cardsInHands: make(map[int][]int),
 			CardsOnTable:   CardsOnTable{TopCard: 0, Level: 0, Lives: 0, Stars: 0},
-			levelCards:     nil,
-			discardedCards: nil},
+			levelCards:     make(map[int]LevelCard),
+			discardedCards: make(map[int]int)},
 	}
 }
 
-func NewGameState(gt string) *GameState {
+func newGameState(gt string) *GameState {
 	return &GameState{
 		GameToken:        gt,
 		PlayerToken:      "",
 		PlayerName:       "",
 		PlayerId:         0,
-		CardsOfPlayer:    CardsOfPlayer{CardsInHand: nil, NrCardsOfOtherPlayers: nil},
-		PlayerNames:      nil,
+		CardsOfPlayer:    CardsOfPlayer{CardsInHand: make([]int, 0), NrCardsOfOtherPlayers: make(map[int]int)},
+		PlayerNames:      make(map[int]string),
 		CardsOnTable:     CardsOnTable{TopCard: 0, Level: 0, Lives: 0, Stars: 0},
 		GameStateEvent:   GameStateEvent{Name: "", LevelTitle: "", StarsIncrease: false, StarsDecrease: false, LivesIncrease: false, LivesDecrease: false},
-		ReadyEvent:       ReadyEvent{Name: "lobby", TriggeredBy: 0, Ready: nil},
-		PlaceCardEvent:   PlaceCardEvent{Name: "", TriggeredBy: 0, DiscardedCard: nil},
-		ProcessStarEvent: ProcessStarEvent{Name: "", TriggeredBy: 0, ProStar: nil, ConStar: nil},
+		ReadyEvent:       ReadyEvent{Name: "lobby", TriggeredBy: 0, Ready: make([]int, 0)},
+		PlaceCardEvent:   PlaceCardEvent{Name: "", TriggeredBy: 0, DiscardedCard: make(map[int]int)},
+		ProcessStarEvent: ProcessStarEvent{Name: "", TriggeredBy: 0, ProStar: make([]int, 0), ConStar: make([]int, 0)},
 		err:              nil,
 	}
 }
@@ -106,7 +106,9 @@ func NewGameState(gt string) *GameState {
 func actionCheck(inputDetails InputDetails, gameState *GameState) bool {
 	if gameState.ReadyEvent.Name != "" {
 		x0 := inputDetails.ActionId != "start"
-		if x0 || inputDetails.ActionId != "ready" {
+		x1 := inputDetails.ActionId != "ready"
+		x2 := inputDetails.ActionId != "create"
+		if x0 || x1 || x2 {
 			gameState.err = NewGameError("warning", "wrong action:  game is not started or is in concentration")
 			return false
 		}
@@ -130,7 +132,7 @@ func actionCheck(inputDetails InputDetails, gameState *GameState) bool {
 }
 
 func gameLogicBasedOnAction(raw InputDetails, manager *GameManager, gameState *GameState) {
-	currplayerIdx := manager.playerId2Token[raw.PlayerToken]
+	currplayerIdx := manager.playerTokenToID[raw.PlayerToken]
 	switch raw.ActionId {
 	case "start":
 		gameState.ReadyEvent.Ready = append(gameState.ReadyEvent.Ready, currplayerIdx)
@@ -336,7 +338,7 @@ func actDueToRightPlacedCard(communicator *GameManager, gameState *GameState, cu
 
 func convertFromGameManagerToChannelOutput(communicator *GameManager, game *GameState) {
 	for playerToken, playerChannel := range communicator.subs {
-		game.PlayerId = communicator.playerId2Token[playerToken]
+		game.PlayerId = communicator.playerTokenToID[playerToken]
 		game.PlayerToken = playerToken
 		game.PlayerName = game.PlayerNames[game.PlayerId]
 		game.CardsOfPlayer = cardsInHandOfPlayer(game.PlayerId, communicator.cardsInHands)
@@ -376,12 +378,12 @@ func (readyEvent *ReadyEvent) triggerReadyEvent(triggedby int) {
 func (readyEvent *ReadyEvent) resetReadyEvent() {
 	readyEvent.Name = ""
 	readyEvent.TriggeredBy = 0
-	readyEvent.Ready = nil
+	readyEvent.Ready = make([]int, 0)
 }
 func (readyEvent *ReadyEvent) setReadyEventToCencentrate() {
 	readyEvent.Name = "concentrate"
 	readyEvent.TriggeredBy = 0
-	readyEvent.Ready = nil
+	readyEvent.Ready = make([]int, 0)
 }
 func (placeCardEvent *PlaceCardEvent) setPlaceCardEvent(name string, triggeredBy int, discardedCards map[int]int) {
 	placeCardEvent.Name = name
@@ -391,19 +393,19 @@ func (placeCardEvent *PlaceCardEvent) setPlaceCardEvent(name string, triggeredBy
 func (placeCardEvent *PlaceCardEvent) resetPlaceCardEvent() {
 	placeCardEvent.Name = ""
 	placeCardEvent.TriggeredBy = 0
-	placeCardEvent.DiscardedCard = nil
+	placeCardEvent.DiscardedCard = make(map[int]int)
 }
 func (processCardEvent *ProcessStarEvent) resetProcessStarEvent() {
 	processCardEvent.Name = ""
 	processCardEvent.TriggeredBy = 0
-	processCardEvent.ProStar = nil
-	processCardEvent.ConStar = nil
+	processCardEvent.ProStar = make([]int, 0)
+	processCardEvent.ConStar = make([]int, 0)
 }
 func (processCardEvent *ProcessStarEvent) triggerProcessStarEvent(triggedby int) {
 	processCardEvent.Name = "propose-star"
 	processCardEvent.TriggeredBy = triggedby
 	processCardEvent.ProStar = append(processCardEvent.ProStar, triggedby)
-	processCardEvent.ConStar = nil
+	processCardEvent.ConStar = make([]int, 0)
 }
 func (gameStateEvent *GameStateEvent) resetGameStateEvent() {
 	gameStateEvent.Name = ""

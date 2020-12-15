@@ -29,33 +29,33 @@ func TestServer(t *testing.T) {
 	defer c.Close(websocket.StatusInternalError, "the sky is falling")
 
 	// correct input
-	var payload_request = &InputDetails{
+	var payloadRequest = &InputDetails{
 		PlayerName: "mary",
 		ActionId:   "create",
 	}
-	err = wsjson.Write(ctx, c, payload_request)
+	err = wsjson.Write(ctx, c, payloadRequest)
 	if err != nil {
 		t.Fatal(err.Error())
 		return
 	}
-	var payload_response = &GameOutput{}
-	err = wsjson.Read(ctx, c, &payload_response)
+	var payloadResponse = &GameOutput{}
+	err = wsjson.Read(ctx, c, &payloadResponse)
 	if err != nil {
 		t.Fatal(err.Error())
 		return
 	}
 	// wrong input
-	payload_request = &InputDetails{
+	payloadRequest = &InputDetails{
 		PlayerName: "mary",
 		ActionId:   "",
 	}
-	err = wsjson.Write(ctx, c, payload_request)
+	err = wsjson.Write(ctx, c, payloadRequest)
 	if err != nil {
 		t.Fatal(err.Error())
 		return
 	}
-	payload_response = &GameOutput{}
-	err = wsjson.Read(ctx, c, &payload_response)
+	payloadResponse = &GameOutput{}
+	err = wsjson.Read(ctx, c, &payloadResponse)
 	if err == nil {
 		t.Fatal(err.Error())
 		return

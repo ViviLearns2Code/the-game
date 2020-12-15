@@ -55,9 +55,9 @@ type CardsManager struct {
 }
 
 type GameManager struct {
-	playerId2Token map[string]int            // token to int
-	subs           map[string]chan GameState // token to channel
-	started        bool
+	playerTokenToID map[string]int            // token to int
+	subs            map[string]chan GameState // token to channel
+	started         bool
 	CardsManager
 }
 
