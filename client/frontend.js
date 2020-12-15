@@ -5,7 +5,7 @@ import { LobbyUI } from './lobby.js'
 import { GameUI } from './game.js'
 import { TestUI } from './test.js'
 
-var websocket = new WebSocket("wss://linusseelinger.de:4000/socket");
+var websocket = new WebSocket("wss://game-backend.linusseelinger.de:4000/socket");
 
 
 const app = new PIXI.Application({ backgroundColor: 0x1099bb });
