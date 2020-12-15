@@ -18,10 +18,6 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 
-// Add unsubscribe if input checks fail
-// Add error handling
-
-//var listenAddr = "192.168.178.23:4000" //localhost:4000
 var listenAddr string
 
 // Global map, protected by lock
@@ -65,6 +61,12 @@ func addGameToMap(gameToken string, game Game) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	gameMap[gameToken] = game
+}
+
+func removeGameFromMap(gameToken string) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	delete(gameMap, gameToken)
 }
 
 var rootTemplate = template.Must(template.New("root").Parse(`
@@ -335,6 +337,12 @@ func listenPlayerChannel(c *websocket.Conn, ctx context.Context, myPlayerChannel
 				return
 			}
 		}
+		if gameState.GameStateEvent.Name == "gameOver" {
+			log.Printf("Game over! Removing game...")
+			removeGameFromMap(gameState.GameToken)
+			return
+		}
+
 		log.Printf("New game state received")
 		output := convertGameStateToOutput(&gameState)
 		err = wsjson.Write(ctx, c, output)
