@@ -244,7 +244,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Connection established...")
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		InsecureSkipVerify: false,
-		OriginPatterns:     []string{"0.0.0.0:8000", "localhost:8000", "127.0.0.1:8000"},
+		OriginPatterns:     []string{"www.game.linusseelinger.de", "0.0.0.0:8000", "localhost:8000", "127.0.0.1:8000"},
 	})
 	if err != nil {
 		log.Printf(err.Error())
