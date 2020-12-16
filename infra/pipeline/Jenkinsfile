@@ -25,9 +25,9 @@ pipeline {
             }
         }
     }
-    post{
-        unsuccessful{
-            slackSend message: '${env.JOB_NAME} build #${env.BUILD_NUMBER} FAILED (<${env.BUILD_URL}|Open>)'
+    post {
+        unsuccessful {
+            slackSend message: "${env.JOB_NAME} build #${env.BUILD_NUMBER} FAILED (<${env.RUN_DISPLAY_URL}|Open>)"
         }
     }
 }
