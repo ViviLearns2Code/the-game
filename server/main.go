@@ -33,7 +33,7 @@ func init() {
 	if !ok {
 		host = getLocalIP()
 	}
-	listenAddr = fmt.Sprintf("%s:4000", host)
+	listenAddr = fmt.Sprintf("%s:80", host)
 	log.Printf("Listening on %s", listenAddr)
 }
 

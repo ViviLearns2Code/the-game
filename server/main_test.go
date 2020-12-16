@@ -17,7 +17,7 @@ func TestServer(t *testing.T) {
 	if !ok {
 		host = getLocalIP()
 	}
-	wsAddress = fmt.Sprintf("ws://%s:4000/socket", host)
+	wsAddress = fmt.Sprintf("ws://%s:80/socket", host)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
