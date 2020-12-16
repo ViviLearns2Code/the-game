@@ -116,22 +116,22 @@ func actionCheck(inputDetails InputDetails, gameState *GameState) bool {
 		x1 := inputDetails.ActionId != "ready"
 		x2 := inputDetails.ActionId != "create"
 		x3 := inputDetails.ActionId != "join"
-		if x0 || x1 || x2 || x3 {
+		if x0 && x1 && x2 && x3 {
 			gameState.err = NewGameError("warning", "wrong action:  game is not started or is in concentration")
 			return false
 		}
-		if (gameState.ReadyEvent.Name == "lobby") || (inputDetails.ActionId != "start") {
+		if (gameState.ReadyEvent.Name == "lobby") && x0 {
 			gameState.err = NewGameError("warning", "wrong action:  game is not started, start action is expected")
 			return false
 		}
-		if (gameState.ReadyEvent.Name == "concentrate") || (inputDetails.ActionId != "ready") {
+		if (gameState.ReadyEvent.Name == "concentrate") && x1 {
 			gameState.err = NewGameError("warning", "wrong action:  game is in concentrating, ready action is expected")
 			return false
 		}
 	}
 	if gameState.ProcessStarEvent.Name == "agreeStar" {
 		x0 := inputDetails.ActionId != "reject-Star"
-		if x0 || inputDetails.ActionId != "agree-star" {
+		if x0 && inputDetails.ActionId != "agree-star" {
 			gameState.err = NewGameError("warning", "wrong action:  star is proposed, agree/reject star action is expected")
 			return false
 		}
@@ -346,7 +346,6 @@ func actDueToRightPlacedCard(communicator *GameManager, gameState *GameState, cu
 
 func convertFromGameManagerToChannelOutput(communicator *GameManager, gameState *GameState) {
 	for playerToken, playerChannel := range communicator.subs {
-		log.Println("Entered convert")
 		gameState.PlayerId = communicator.playerTokenToID[playerToken]
 		gameState.PlayerToken = playerToken
 		gameState.PlayerName = gameState.PlayerNames[gameState.PlayerId]

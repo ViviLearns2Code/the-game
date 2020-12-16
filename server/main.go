@@ -215,16 +215,18 @@ func validateInput(gameDetails InputDetails, myGame Game, myPlayerToken string, 
 	if gameDetails.ActionId == "create" {
 		return ok
 	}
+	// checks for join: fully covered
+	if gameDetails.ActionId == "join" {
+		if _, found := getGameFromMap(gameDetails.GameToken); !found {
+			ok = false
+		}
+		return ok
+	}
 	// common checks for remaining actions
 	if !isValidGame(gameDetails.GameToken, myGame.token) {
 		ok = false
 		return ok
 	}
-	// checks for join: fully covered
-	if gameDetails.ActionId == "join" {
-		return ok
-	}
-	// common checks for remaining actions
 	if !isValidPlayer(gameDetails.PlayerToken, myPlayerToken) {
 		ok = false
 		return ok
@@ -242,7 +244,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Connection established...")
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		InsecureSkipVerify: false,
-		OriginPatterns:     []string{"0.0.0.0:8000"},
+		OriginPatterns:     []string{"0.0.0.0:8000", "localhost:8000", "127.0.0.1:8000"},
 	})
 	if err != nil {
 		log.Printf(err.Error())
@@ -270,7 +272,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		gameDetails := extractDetails(data)
-		inputOk := validateInput(gameDetails, myGame, myPlayerName, myPlayerToken)
+		inputOk := validateInput(gameDetails, myGame, myPlayerToken, myPlayerName)
 		if !inputOk {
 			output := convertGameStateToOutput(newGameState(myGame.token))
 			output.ErrorMsg = "Wrong input"
@@ -315,7 +317,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			myGame, _ := getGameFromMap(gameDetails.GameToken)
 			myGame.Unsubscribe(myPlayerToken)
 		default:
-			log.Printf("Other action...")
+			log.Printf("Action %s", gameDetails.ActionId)
 			myGame.inputCh <- gameDetails
 		}
 	}
