@@ -10,48 +10,55 @@ import (
 )
 
 func (g *Game) Start() {
-	// loop
+	// game loop
 	var manager = newGameManager()
 	var gameState = newGameState(g.token)
 	nextPlayerID := 1
 	for {
 		select {
 		case inputDetails := <-g.inputCh:
+			log.Printf("inputDetails := <-g.inputCh")
 			if actionCheck(inputDetails, gameState) {
 				gameLogicBasedOnAction(inputDetails, manager, gameState)
 			}
-			g.publishCh <- true
+			convertFromGameManagerToChannelOutput(manager, gameState)
+			// TODO: return from this game's goroutine/loop after gameover event!
+			gameState.updateEventsAfterProcessedEvent(manager.started)
 		case subscriber := <-g.subCh:
+			log.Printf("subscriber := <-g.subCh")
 			if (len(gameState.PlayerNames) >= 4) || manager.started {
 				var err = NewGameError("error", "cannot join game anymore")
-				subscriber.playerChannel <- GameState{
-					err: err,
-				}
+				var gs = newGameState(g.token)
+				gs.err = err
+				subscriber.playerChannel <- *gs
 			} else {
 				gameState.PlayerNames[nextPlayerID] = subscriber.playerName
 				manager.playerTokenToID[subscriber.playerToken] = nextPlayerID
 				manager.subs[subscriber.playerToken] = subscriber.playerChannel
 				nextPlayerID++
-				g.publishCh <- true
+				log.Printf("New game state published")
+				convertFromGameManagerToChannelOutput(manager, gameState)
+				gameState.updateEventsAfterProcessedEvent(manager.started)
 			}
-		case <-g.unsubCh:
+		case playerToken := <-g.unsubCh:
 			gameState.GameStateEvent.Name = "gameOver"
-			g.publishCh <- true
-		case <-g.publishCh:
-			log.Printf("New game state published")
-			convertFromGameManagerToChannelOutput(manager, gameState)
-			gameState.updateEventsAfterProcessedEvent(manager.started)
+			if playerChannel, ok := manager.subs[playerToken]; ok {
+				close(playerChannel)
+				delete(manager.subs, playerToken)
+				log.Printf("New game state published")
+				convertFromGameManagerToChannelOutput(manager, gameState)
+				gameState.updateEventsAfterProcessedEvent(manager.started)
+			}
 		}
 	}
 }
 
 func NewGame() *Game {
 	return &Game{
-		token:     uuid.New().String(), //concurrent reads only!
-		inputCh:   make(chan InputDetails),
-		publishCh: make(chan bool, 1),
-		subCh:     make(chan subscription, 1),
-		unsubCh:   make(chan string, 1),
+		token:   uuid.New().String(), //concurrent reads only!
+		inputCh: make(chan InputDetails),
+		subCh:   make(chan subscription, 1),
+		unsubCh: make(chan string, 1),
 	}
 }
 
@@ -61,7 +68,7 @@ func describe(i interface{}) {
 
 func (g *Game) Subscribe(playerName string) (string, chan GameState) {
 	playerToken := uuid.New().String()
-	playerChannel := make(chan GameState)
+	playerChannel := make(chan GameState, 1)
 	g.subCh <- subscription{
 		playerToken:   playerToken,
 		playerName:    playerName,
@@ -108,7 +115,8 @@ func actionCheck(inputDetails InputDetails, gameState *GameState) bool {
 		x0 := inputDetails.ActionId != "start"
 		x1 := inputDetails.ActionId != "ready"
 		x2 := inputDetails.ActionId != "create"
-		if x0 || x1 || x2 {
+		x3 := inputDetails.ActionId != "join"
+		if x0 || x1 || x2 || x3 {
 			gameState.err = NewGameError("warning", "wrong action:  game is not started or is in concentration")
 			return false
 		}
@@ -336,14 +344,19 @@ func actDueToRightPlacedCard(communicator *GameManager, gameState *GameState, cu
 	}
 }
 
-func convertFromGameManagerToChannelOutput(communicator *GameManager, game *GameState) {
+func convertFromGameManagerToChannelOutput(communicator *GameManager, gameState *GameState) {
 	for playerToken, playerChannel := range communicator.subs {
-		game.PlayerId = communicator.playerTokenToID[playerToken]
-		game.PlayerToken = playerToken
-		game.PlayerName = game.PlayerNames[game.PlayerId]
-		game.CardsOfPlayer = cardsInHandOfPlayer(game.PlayerId, communicator.cardsInHands)
-		game.CardsOnTable = communicator.CardsOnTable
-		playerChannel <- *game
+		log.Println("Entered convert")
+		gameState.PlayerId = communicator.playerTokenToID[playerToken]
+		gameState.PlayerToken = playerToken
+		gameState.PlayerName = gameState.PlayerNames[gameState.PlayerId]
+		gameState.CardsOfPlayer = cardsInHandOfPlayer(gameState.PlayerId, communicator.cardsInHands)
+		gameState.CardsOnTable = communicator.CardsOnTable
+		select {
+		case playerChannel <- *gameState:
+			// handled by goroutine in main.go
+		default:
+		}
 	}
 }
 func cardsInHandOfPlayer(playerIdx int, cardsInHands map[int][]int) (cardsOfPlayer CardsOfPlayer) {
