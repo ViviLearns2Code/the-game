@@ -29,7 +29,11 @@ func init() {
 	if !ok {
 		host = getLocalIP()
 	}
-	listenAddr = fmt.Sprintf("%s:443", host)
+	port, ok := os.LookupEnv("GAMEPORT")
+	if !ok {
+		port = "4000"
+	}
+	listenAddr = fmt.Sprintf("%s:%s", host, port)
 	log.Printf("Listening on %s", listenAddr)
 }
 
