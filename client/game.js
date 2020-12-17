@@ -207,7 +207,7 @@ export class GameUI extends PIXI.Container {
         .onComplete(()=>{
           self.removeChild(cardPlayedText);
         })
-        tweenShowCardPlayed.chain(tweenHideCardPlayed);
+      tweenShowCardPlayed.chain(tweenHideCardPlayed);
     }
 
     if (gameState.gameState?.gameStateEvent?.name === "gameOver") {

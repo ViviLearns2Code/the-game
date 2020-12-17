@@ -78,8 +78,6 @@ export class WelcomeUI extends PIXI.Container {
       websocket.send(message);
     }
 
-
-    this.visible = false
   }
 
   parseGameState(gameState) {
