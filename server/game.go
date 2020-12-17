@@ -22,7 +22,9 @@ func (g *Game) Start() {
 				gameLogicBasedOnAction(inputDetails, manager, gameState)
 			}
 			convertFromGameManagerToChannelOutput(manager, gameState)
-			// TODO: return from this game's goroutine/loop after gameover event!
+			if gameState.GameStateEvent.Name == "gameOver" {
+				return
+			}
 			gameState.updateEventsAfterProcessedEvent(manager.started)
 		case subscriber := <-g.subCh:
 			log.Printf("subscriber := <-g.subCh")
@@ -49,6 +51,7 @@ func (g *Game) Start() {
 				convertFromGameManagerToChannelOutput(manager, gameState)
 				gameState.updateEventsAfterProcessedEvent(manager.started)
 			}
+			return
 		}
 	}
 }
@@ -349,22 +352,15 @@ func convertFromGameManagerToChannelOutput(communicator *GameManager, gameState 
 		gameState.PlayerId = communicator.playerTokenToID[playerToken]
 		gameState.PlayerToken = playerToken
 		gameState.PlayerName = gameState.PlayerNames[gameState.PlayerId]
-		gameState.CardsOfPlayer = cardsInHandOfPlayer(gameState.PlayerId, communicator.cardsInHands)
-		gameState.CardsOnTable = communicator.CardsOnTable
-		select {
-		case playerChannel <- *gameState:
-			// handled by goroutine in main.go
-		default:
+		gameState.CardsOfPlayer.CardsInHand = communicator.cardsInHands[gameState.PlayerId]
+		for playerID, cards := range communicator.cardsInHands {
+			gameState.CardsOfPlayer.NrCardsOfOtherPlayers[playerID] = cap(cards)
 		}
+		gameState.CardsOnTable = communicator.CardsOnTable
+		playerChannel <- *gameState
 	}
 }
-func cardsInHandOfPlayer(playerIdx int, cardsInHands map[int][]int) (cardsOfPlayer CardsOfPlayer) {
-	cardsOfPlayer.CardsInHand = cardsInHands[playerIdx]
-	for playerID, cards := range cardsInHands {
-		cardsOfPlayer.NrCardsOfOtherPlayers[playerID] = cap(cards)
-	}
-	return cardsOfPlayer
-}
+
 func (game *GameState) updateEventsAfterProcessedEvent(started bool) {
 	if (len(game.ReadyEvent.Ready) == len(game.PlayerNames)) && started {
 		game.ReadyEvent.resetReadyEvent()
