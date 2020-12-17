@@ -1,4 +1,5 @@
 import * as PIXI from './pixi.mjs';
+import * as PIXITEXTINPUT from './PIXI.TextInput.js';
 
 export class LobbyUI extends PIXI.Container {
   constructor(websocket) {
@@ -8,6 +9,15 @@ export class LobbyUI extends PIXI.Container {
     this.addChild(titleText);
     titleText.x = 50;
     titleText.y = 100;
+
+    this.tokenText = new PIXITEXTINPUT.TextInput({
+      input: {fontSize: '25px'},
+      box: {fill: 0xEEEEEE}
+    })
+    this.tokenText.x = 50
+    this.tokenText.y = 150
+    //this.tokenText.disabled = true;
+    this.addChild(this.tokenText)
 
     this.playerStatesText = new PIXI.Text('');
     this.addChild(this.playerStatesText);
@@ -82,6 +92,8 @@ export class LobbyUI extends PIXI.Container {
     this.playerName = gameState.gameState.playerName;
     this.playerToken = gameState.gameState.playerToken;
     this.gameToken = gameState.gameState.gameToken;
+
+    this.tokenText.text = gameState.gameState.gameToken;
 
     this.playerStatesText.text = "";
     for (const [playerId, playerName] of Object.entries(gameState.gameState.playerNames)) {
