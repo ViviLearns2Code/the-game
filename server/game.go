@@ -188,7 +188,7 @@ func actIfStartGame(communicator *GameManager, gameState *GameState) {
 		communicator.CardsManager.createCardsManager(nrOfPlayer)
 		communicator.CardsManager.handoutCards(nrOfPlayer)
 		gameState.ReadyEvent.setReadyEventToCencentrate()
-		gameState.GameStateEvent.Name = "levelup"
+		gameState.GameStateEvent.Name = "levelUp"
 		gameState.GameStateEvent.LevelTitle = communicator.CardsManager.levelCards[1].levelTitle
 	}
 }
@@ -243,9 +243,10 @@ func (cards *CardsManager) handoutCards(nrOfPlayer int) {
 	cards.cardsInHands = make(map[int][]int)
 	rand.Seed(time.Now().UTC().UnixNano())
 	numberCards := rand.Perm(100)
+	log.Printf("nrofnumbercards %v\n", len(numberCards))
 	for i := 1; i <= cards.CardsOnTable.Level; i++ {
 		for j := 1; j <= nrOfPlayer; j++ {
-			cards.cardsInHands[j] = append(cards.cardsInHands[j], numberCards[len(numberCards)-1])
+			cards.cardsInHands[j] = append(cards.cardsInHands[j], numberCards[len(numberCards)-1]+1)
 			numberCards = numberCards[:len(numberCards)-1]
 		}
 	}
@@ -324,7 +325,7 @@ func actIfUsingStar(communicator *GameManager, gameState *GameState) {
 
 func wrongPlacedCard(currentCard int, manager *GameManager) bool {
 	for playerIdx, cardsInHand := range manager.cardsInHands {
-		if cardsInHand[0] < currentCard {
+		if cardsInHand[0] <= currentCard {
 			manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[0], cardsInHand[1:]
 		}
 	}
@@ -365,7 +366,10 @@ func convertFromGameManagerToChannelOutput(communicator *GameManager, gameState 
 			gameState.CardsOfPlayer.NrCardsOfOtherPlayers[playerID] = cap(cards)
 		}
 		gameState.CardsOnTable = communicator.CardsOnTable
-		playerChannel <- *gameState
+		select {
+		case playerChannel <- *gameState:
+			// handled by goroutine in main.go
+		}
 	}
 }
 
