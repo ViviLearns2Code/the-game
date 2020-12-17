@@ -18,7 +18,7 @@ func (g *Game) Start() {
 		select {
 		case inputDetails := <-g.inputCh:
 			log.Printf("inputDetails := <-g.inputCh")
-			if actionCheck(inputDetails, gameState) {
+			if actionCheck(inputDetails, gameState, manager) {
 				gameLogicBasedOnAction(inputDetails, manager, gameState)
 			}
 			convertFromGameManagerToChannelOutput(manager, gameState)
@@ -113,7 +113,7 @@ func newGameState(gt string) *GameState {
 	}
 }
 
-func actionCheck(inputDetails InputDetails, gameState *GameState) bool {
+func actionCheck(inputDetails InputDetails, gameState *GameState, communicator *GameManager) bool {
 	if gameState.ReadyEvent.Name != "" {
 		x0 := inputDetails.ActionId != "start"
 		x1 := inputDetails.ActionId != "ready"
@@ -131,6 +131,10 @@ func actionCheck(inputDetails InputDetails, gameState *GameState) bool {
 			gameState.err = NewGameError("warning", "wrong action:  game is in concentrating, ready action is expected")
 			return false
 		}
+	}
+	if inputDetails.ActionId == "propose-star" && communicator.CardsOnTable.Stars == 0 {
+		gameState.err = NewGameError("warning", "wrong action:  no stars")
+		return false
 	}
 	if gameState.ProcessStarEvent.Name == "agreeStar" {
 		x0 := inputDetails.ActionId != "reject-Star"
@@ -263,21 +267,25 @@ func hasAnyCardsInHand(cardsInHands map[int][]int) bool {
 func levelFinish(communicator *GameManager, gameState *GameState) {
 	gameState.GameStateEvent.Name = "levelUp"
 	if communicator.levelCards[communicator.CardsOnTable.Level].lifeAsBonus {
-		communicator.CardsOnTable.Lives++
-		if !gameState.GameStateEvent.LivesDecrease {
-			gameState.GameStateEvent.LivesIncrease = true
-		} else {
-			gameState.GameStateEvent.LivesIncrease = false
-			gameState.GameStateEvent.LivesDecrease = false
+		if communicator.CardsOnTable.Lives < 5 {
+			communicator.CardsOnTable.Lives++
+			if !gameState.GameStateEvent.LivesDecrease {
+				gameState.GameStateEvent.LivesIncrease = true
+			} else {
+				gameState.GameStateEvent.LivesIncrease = false
+				gameState.GameStateEvent.LivesDecrease = false
+			}
 		}
 	}
 	if communicator.levelCards[communicator.CardsOnTable.Level].starAsBonus {
-		communicator.CardsOnTable.Stars++
-		if !gameState.GameStateEvent.StarsDecrease {
-			gameState.GameStateEvent.StarsIncrease = true
-		} else {
-			gameState.GameStateEvent.StarsIncrease = false
-			gameState.GameStateEvent.StarsDecrease = false
+		if communicator.CardsOnTable.Stars < 3 {
+			communicator.CardsOnTable.Stars++
+			if !gameState.GameStateEvent.StarsDecrease {
+				gameState.GameStateEvent.StarsIncrease = true
+			} else {
+				gameState.GameStateEvent.StarsIncrease = false
+				gameState.GameStateEvent.StarsDecrease = false
+			}
 		}
 	}
 	communicator.CardsOnTable.Level++
