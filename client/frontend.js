@@ -34,7 +34,6 @@ websocket.onmessage = function (event) {
   console.log(event.data);
 
   var gameState = JSON.parse(event.data);
-  print(gameState)
   parseGameStateGlobal(gameState);
 }
 websocket.onclose = function (event) {
