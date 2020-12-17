@@ -53,7 +53,9 @@ export class ConcentrationUI extends PIXI.Container {
 
     // Main switch animation
     var visibleBefore = this.targetVisible;
-    this.targetVisible = gameState.gameState?.readyEvent?.name === "concentrate";
+    var inConcentrationPhase = gameState.gameState?.readyEvent?.name === "concentrate";
+    var everyoneReady = gameState.gameState?.readyEvent?.ready.length === Object.keys(gameState.gameState?.playerNames).length;
+    this.targetVisible = inConcentrationPhase && !everyoneReady;
 
     if (visibleBefore != this.targetVisible) {
       if (this.tween)
