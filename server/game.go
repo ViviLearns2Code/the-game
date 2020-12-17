@@ -18,11 +18,13 @@ func (g *Game) Start() {
 		select {
 		case inputDetails := <-g.inputCh:
 			log.Printf("inputDetails := <-g.inputCh")
-			if actionCheck(inputDetails, gameState) {
+			if actionCheck(inputDetails, gameState, manager) {
 				gameLogicBasedOnAction(inputDetails, manager, gameState)
 			}
 			convertFromGameManagerToChannelOutput(manager, gameState)
-			// TODO: return from this game's goroutine/loop after gameover event!
+			if gameState.GameStateEvent.Name == "gameOver" {
+				return
+			}
 			gameState.updateEventsAfterProcessedEvent(manager.started)
 		case subscriber := <-g.subCh:
 			log.Printf("subscriber := <-g.subCh")
@@ -49,6 +51,7 @@ func (g *Game) Start() {
 				convertFromGameManagerToChannelOutput(manager, gameState)
 				gameState.updateEventsAfterProcessedEvent(manager.started)
 			}
+			return
 		}
 	}
 }
@@ -110,7 +113,7 @@ func newGameState(gt string) *GameState {
 	}
 }
 
-func actionCheck(inputDetails InputDetails, gameState *GameState) bool {
+func actionCheck(inputDetails InputDetails, gameState *GameState, communicator *GameManager) bool {
 	if gameState.ReadyEvent.Name != "" {
 		x0 := inputDetails.ActionId != "start"
 		x1 := inputDetails.ActionId != "ready"
@@ -128,6 +131,10 @@ func actionCheck(inputDetails InputDetails, gameState *GameState) bool {
 			gameState.err = NewGameError("warning", "wrong action:  game is in concentrating, ready action is expected")
 			return false
 		}
+	}
+	if inputDetails.ActionId == "propose-star" && communicator.CardsOnTable.Stars == 0 {
+		gameState.err = NewGameError("warning", "wrong action:  no stars")
+		return false
 	}
 	if gameState.ProcessStarEvent.Name == "agreeStar" {
 		x0 := inputDetails.ActionId != "reject-Star"
@@ -260,21 +267,25 @@ func hasAnyCardsInHand(cardsInHands map[int][]int) bool {
 func levelFinish(communicator *GameManager, gameState *GameState) {
 	gameState.GameStateEvent.Name = "levelUp"
 	if communicator.levelCards[communicator.CardsOnTable.Level].lifeAsBonus {
-		communicator.CardsOnTable.Lives++
-		if !gameState.GameStateEvent.LivesDecrease {
-			gameState.GameStateEvent.LivesIncrease = true
-		} else {
-			gameState.GameStateEvent.LivesIncrease = false
-			gameState.GameStateEvent.LivesDecrease = false
+		if communicator.CardsOnTable.Lives < 5 {
+			communicator.CardsOnTable.Lives++
+			if !gameState.GameStateEvent.LivesDecrease {
+				gameState.GameStateEvent.LivesIncrease = true
+			} else {
+				gameState.GameStateEvent.LivesIncrease = false
+				gameState.GameStateEvent.LivesDecrease = false
+			}
 		}
 	}
 	if communicator.levelCards[communicator.CardsOnTable.Level].starAsBonus {
-		communicator.CardsOnTable.Stars++
-		if !gameState.GameStateEvent.StarsDecrease {
-			gameState.GameStateEvent.StarsIncrease = true
-		} else {
-			gameState.GameStateEvent.StarsIncrease = false
-			gameState.GameStateEvent.StarsDecrease = false
+		if communicator.CardsOnTable.Stars < 3 {
+			communicator.CardsOnTable.Stars++
+			if !gameState.GameStateEvent.StarsDecrease {
+				gameState.GameStateEvent.StarsIncrease = true
+			} else {
+				gameState.GameStateEvent.StarsIncrease = false
+				gameState.GameStateEvent.StarsDecrease = false
+			}
 		}
 	}
 	communicator.CardsOnTable.Level++
@@ -349,22 +360,15 @@ func convertFromGameManagerToChannelOutput(communicator *GameManager, gameState 
 		gameState.PlayerId = communicator.playerTokenToID[playerToken]
 		gameState.PlayerToken = playerToken
 		gameState.PlayerName = gameState.PlayerNames[gameState.PlayerId]
-		gameState.CardsOfPlayer = cardsInHandOfPlayer(gameState.PlayerId, communicator.cardsInHands)
-		gameState.CardsOnTable = communicator.CardsOnTable
-		select {
-		case playerChannel <- *gameState:
-			// handled by goroutine in main.go
-		default:
+		gameState.CardsOfPlayer.CardsInHand = communicator.cardsInHands[gameState.PlayerId]
+		for playerID, cards := range communicator.cardsInHands {
+			gameState.CardsOfPlayer.NrCardsOfOtherPlayers[playerID] = cap(cards)
 		}
+		gameState.CardsOnTable = communicator.CardsOnTable
+		playerChannel <- *gameState
 	}
 }
-func cardsInHandOfPlayer(playerIdx int, cardsInHands map[int][]int) (cardsOfPlayer CardsOfPlayer) {
-	cardsOfPlayer.CardsInHand = cardsInHands[playerIdx]
-	for playerID, cards := range cardsInHands {
-		cardsOfPlayer.NrCardsOfOtherPlayers[playerID] = cap(cards)
-	}
-	return cardsOfPlayer
-}
+
 func (game *GameState) updateEventsAfterProcessedEvent(started bool) {
 	if (len(game.ReadyEvent.Ready) == len(game.PlayerNames)) && started {
 		game.ReadyEvent.resetReadyEvent()
