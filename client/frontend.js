@@ -4,6 +4,7 @@ import { WelcomeUI } from './welcome.js'
 import { LobbyUI } from './lobby.js'
 import { GameUI } from './game.js'
 import { ConcentrationUI } from './concentration.js'
+import { StarUI } from './star.js'
 import { TestUI } from './test.js'
 
 var websocket = new WebSocket("wss://game-backend.linusseelinger.de/socket");
@@ -21,13 +22,16 @@ app.stage.addChild(lobbyContainer);
 var gameContainer = new GameUI(websocket);
 app.stage.addChild(gameContainer);
 
-var testContainer = new TestUI(parseGameStateGlobal)
-app.stage.addChild(testContainer)
+var starContainer = new StarUI(websocket);
+app.stage.addChild(starContainer);
 
 var concentrationContainer = new ConcentrationUI(websocket)
 app.stage.addChild(concentrationContainer)
 concentrationContainer.x = app.stage.width / 2;
 concentrationContainer.y = app.stage.height / 2;
+
+var testContainer = new TestUI(parseGameStateGlobal)
+app.stage.addChild(testContainer)
 
 
 function parseGameStateGlobal(gameState) {
@@ -35,6 +39,7 @@ function parseGameStateGlobal(gameState) {
   lobbyContainer.parseGameState(gameState);
   gameContainer.parseGameState(gameState);
   concentrationContainer.parseGameState(gameState);
+  starContainer.parseGameState(gameState);
   testContainer.parseGameState(gameState);
 
   if (gameState.errorMsg === "") {
