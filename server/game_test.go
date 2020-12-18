@@ -168,4 +168,112 @@ func TestStart(t *testing.T) {
 			testReadyEventResult(t, c2, 2, expectedReadyEvent)
 		}
 	}
+
+	// bob and mary are ready for level 2
+	bobInput.ActionId = "ready"
+	myGame.inputCh <- *bobInput
+	for i := 0; i < 2; i++ {
+		select {
+		case <-maryChannel:
+		case <-bobChannel:
+		}
+	}
+	var cardsOfMary []int
+	var cardsOfBob []int
+	maryInput.ActionId = "ready"
+	myGame.inputCh <- *maryInput
+	for i := 0; i < 2; i++ {
+		select {
+		case c1 := <-maryChannel:
+			cardsOfMary = c1.CardsOfPlayer.CardsInHand
+		case c2 := <-bobChannel:
+			cardsOfBob = c2.CardsOfPlayer.CardsInHand
+		}
+	}
+	// the correct card is played
+	// check cards on table and in hands
+	if cardsOfMary[0] < cardsOfBob[0] {
+		maryInput.ActionId = "card"
+		maryInput.CardId = cardsOfMary[0]
+		myGame.inputCh <- *maryInput
+		expectedPlaceCardEvent.TriggeredBy = maryID
+		expectedPlaceCardEvent.DiscardedCard = map[int]int{maryID: maryInput.CardId}
+	} else {
+		bobInput.ActionId = "card"
+		bobInput.CardId = cardsOfBob[0]
+		myGame.inputCh <- *bobInput
+		expectedPlaceCardEvent.TriggeredBy = bobID
+		expectedPlaceCardEvent.DiscardedCard = map[int]int{bobID: bobInput.CardId}
+	}
+
+	nrOfCardsMary := 2
+	if expectedPlaceCardEvent.TriggeredBy == maryID {
+		nrOfCardsMary--
+	}
+	nrOfCardsBob := 3 - nrOfCardsMary
+	for i := 0; i < 2; i++ {
+		select {
+		case c1 := <-maryChannel:
+			testCardsInHandsAndOnTable(t, c1, nrOfCardsMary, expectedPlaceCardEvent.DiscardedCard[expectedPlaceCardEvent.TriggeredBy], 2, 1, 1)
+			assert.Equal(t, c1.PlaceCardEvent, expectedPlaceCardEvent)
+		case c2 := <-bobChannel:
+			testCardsInHandsAndOnTable(t, c2, nrOfCardsBob, expectedPlaceCardEvent.DiscardedCard[expectedPlaceCardEvent.TriggeredBy], 2, 1, 1)
+			assert.Equal(t, c2.PlaceCardEvent, expectedPlaceCardEvent)
+		}
+	}
+
+	// concentration triggered by mary
+	maryInput.CardId = 0
+	maryInput.ActionId = "concentrate"
+	myGame.inputCh <- *maryInput
+	expectedReadyEvent = ReadyEvent{"concentrate", maryID, make([]int, 0)}
+	for i := 0; i < 2; i++ {
+		select {
+		case c1 := <-maryChannel:
+			testReadyEventResult(t, c1, 2, expectedReadyEvent)
+		case c2 := <-bobChannel:
+			testReadyEventResult(t, c2, 2, expectedReadyEvent)
+		}
+	}
+	bobInput.CardId = 0
+	bobInput.ActionId = "ready"
+	myGame.inputCh <- *bobInput
+	expectedReadyEvent = ReadyEvent{"concentrate", maryID, []int{bobID}}
+	for i := 0; i < 2; i++ {
+		select {
+		case c1 := <-maryChannel:
+			testReadyEventResult(t, c1, 2, expectedReadyEvent)
+		case c2 := <-bobChannel:
+			testReadyEventResult(t, c2, 2, expectedReadyEvent)
+		}
+	}
+	maryInput.CardId = 0
+	maryInput.ActionId = "ready"
+	myGame.inputCh <- *maryInput
+	expectedReadyEvent = ReadyEvent{"concentrate", maryID, []int{bobID, maryID}}
+	for i := 0; i < 2; i++ {
+		select {
+		case c1 := <-maryChannel:
+			testReadyEventResult(t, c1, 2, expectedReadyEvent)
+		case c2 := <-bobChannel:
+			testReadyEventResult(t, c2, 2, expectedReadyEvent)
+		}
+	}
+	// prposal star by bob
+	bobInput.ActionId = "propose-star"
+	myGame.inputCh <- *bobInput
+	expectedProcessStarEvent := ProcessStarEvent{"propose-star", bobID, []int{bobID}, make([]int, 0)}
+	for i := 0; i < 2; i++ {
+		select {
+		case c1 := <-maryChannel:
+			assert.Equal(t, c1.ProcessStarEvent, expectedProcessStarEvent)
+		case c2 := <-bobChannel:
+			assert.Equal(t, c2.ProcessStarEvent, expectedProcessStarEvent)
+		}
+	}
+	// rejected by mary
+
+	// constratation after star
+
+	// place wrong card, game over
 }
