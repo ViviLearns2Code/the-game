@@ -101,7 +101,7 @@ export class GameUI extends PIXI.Container {
           "playerToken": self.playerToken,
           "actionId": "card",
           "playerName": self.playerName,
-          "cardId": this.hand[0],
+          "cardId": parseInt(this.hand[0]),
         }
       );
       console.debug(message)

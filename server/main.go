@@ -19,22 +19,29 @@ import (
 )
 
 var listenAddr string
+var gameOrigin string
 
 // Global map, protected by lock
 var mutex = &sync.RWMutex{}
 var gameMap = make(map[string]Game)
 
 func init() {
-	host, ok := os.LookupEnv("GAMEHOST")
+	var host, port string
+	var ok bool
+	host, ok = os.LookupEnv("GAMEHOST")
 	if !ok {
 		host = getLocalIP()
 	}
-	port, ok := os.LookupEnv("GAMEPORT")
+	port, ok = os.LookupEnv("GAMEPORT")
 	if !ok {
 		port = "4000"
 	}
 	listenAddr = fmt.Sprintf("%s:%s", host, port)
 	log.Printf("Listening on %s", listenAddr)
+	gameOrigin, ok = os.LookupEnv("GAMEORIGIN")
+	if !ok {
+		gameOrigin = "localhost:8000"
+	}
 }
 
 func getLocalIP() string {
@@ -172,13 +179,13 @@ func extractDetails(raw map[string]interface{}) InputDetails {
 	var playerToken, _ = raw["playerToken"].(string)
 	var playerName, _ = raw["playerName"].(string)
 	var actionId, _ = raw["actionId"].(string)
-	var cardId, _ = raw["card"].(int)
+	var cardId, _ = raw["cardId"].(float64)
 	var details = InputDetails{
 		GameToken:   gameToken,
 		PlayerToken: playerToken,
 		PlayerName:  playerName,
 		ActionId:    actionId,
-		CardId:      cardId,
+		CardId:      int(cardId),
 	}
 	return details
 }
@@ -244,7 +251,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Connection established...")
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		InsecureSkipVerify: false,
-		OriginPatterns:     []string{"www.game.linusseelinger.de", "0.0.0.0:8000", "localhost:8000", "127.0.0.1:8000"},
+		OriginPatterns:     []string{gameOrigin},
 	})
 	if err != nil {
 		log.Printf(err.Error())
