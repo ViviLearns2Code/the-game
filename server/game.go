@@ -92,7 +92,7 @@ func newGameManager() *GameManager {
 		CardsManager: CardsManager{cardsInHands: make(map[int][]int),
 			CardsOnTable:   CardsOnTable{TopCard: 0, Level: 0, Lives: 0, Stars: 0},
 			levelCards:     make(map[int]LevelCard),
-			discardedCards: make(map[int]int)},
+			discardedCards: make(map[int][]int)},
 	}
 }
 
@@ -107,7 +107,7 @@ func newGameState(gt string) *GameState {
 		CardsOnTable:     CardsOnTable{TopCard: 0, Level: 0, Lives: 0, Stars: 0},
 		GameStateEvent:   GameStateEvent{Name: "", LevelTitle: "", StarsIncrease: false, StarsDecrease: false, LivesIncrease: false, LivesDecrease: false},
 		ReadyEvent:       ReadyEvent{Name: "lobby", TriggeredBy: 0, Ready: make([]int, 0)},
-		PlaceCardEvent:   PlaceCardEvent{Name: "", TriggeredBy: 0, DiscardedCard: make(map[int]int)},
+		PlaceCardEvent:   PlaceCardEvent{Name: "", TriggeredBy: 0, DiscardedCard: make(map[int][]int)},
 		ProcessStarEvent: ProcessStarEvent{Name: "", TriggeredBy: 0, ProStar: make([]int, 0), ConStar: make([]int, 0)},
 		err:              nil,
 	}
@@ -135,7 +135,7 @@ func actionCheckStarEventRelevant(inputDetails InputDetails, gameState *GameStat
 		gameState.err = NewGameError("warning", "wrong action:  no stars left")
 		return false
 	}
-	x0 := inputDetails.ActionId == "reject-Star"
+	x0 := inputDetails.ActionId == "reject-star"
 	x1 := inputDetails.ActionId == "agree-star"
 	if gameState.ProcessStarEvent.Name == "agreeStar" {
 		if !x0 && !x1 {
@@ -183,7 +183,7 @@ func gameLogicBasedOnAction(raw InputDetails, manager *GameManager, gameState *G
 		appendElementIfUnique(&gameState.ProcessStarEvent.ProStar, currplayerIdx)
 		actIfUsingStar(manager, gameState)
 	case "reject-star":
-		gameState.ProcessStarEvent.Name = "reject-star"
+		gameState.ProcessStarEvent.Name = "rejectStar"
 		appendElementIfUnique(&gameState.ProcessStarEvent.ConStar, currplayerIdx)
 		gameState.ReadyEvent.setReadyEventToCencentrate()
 	default:
@@ -335,30 +335,39 @@ func handleGameoverOrLevelFinish(communicator *GameManager, gameState *GameState
 	}
 }
 
-func actIfUsingStar(communicator *GameManager, gameState *GameState) {
+func actIfUsingStar(manager *GameManager, gameState *GameState) {
 	nrOfPlayer := len(gameState.PlayerNames)
 	if nrOfPlayer == len(gameState.ProcessStarEvent.ProStar) {
-		for playerIdx, cardsInHand := range communicator.cardsInHands {
-			communicator.discardedCards[playerIdx], communicator.cardsInHands[playerIdx] = cardsInHand[0], cardsInHand[1:]
+		for playerIdx, cardsInHand := range manager.cardsInHands {
+			manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[:0], cardsInHand[1:]
 		}
-		gameState.PlaceCardEvent.setPlaceCardEvent("useStar", 0, &communicator.discardedCards)
-		communicator.CardsOnTable.Stars--
+		gameState.PlaceCardEvent.setPlaceCardEvent("useStar", 0, &manager.discardedCards)
+		manager.CardsOnTable.Stars--
 		gameState.GameStateEvent.StarsDecrease = true
 		gameState.GameStateEvent.StarsIncrease = false
 		gameState.GameStateEvent.LivesIncrease = false
 		gameState.GameStateEvent.LivesDecrease = false
-		if hasAnyCardsInHand(communicator.cardsInHands) {
+		if hasAnyCardsInHand(manager.cardsInHands) {
 			gameState.ReadyEvent.setReadyEventToCencentrate()
 		} else {
-			handleGameoverOrLevelFinish(communicator, gameState)
+			handleGameoverOrLevelFinish(manager, gameState)
 		}
 	}
 }
 
 func wrongPlacedCard(currentCard int, manager *GameManager) bool {
 	for playerIdx, cardsInHand := range manager.cardsInHands {
-		if cardsInHand[0] <= currentCard {
-			manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[0], cardsInHand[1:]
+		hasSmallerCard := false
+		n := 0
+		for ; n < len(cardsInHand); n++ {
+			if cardsInHand[n] > currentCard {
+				break
+			} else {
+				hasSmallerCard = true
+			}
+		}
+		if hasSmallerCard {
+			manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[:n], cardsInHand[n:]
 		}
 	}
 	return len(manager.discardedCards) != 1
@@ -431,16 +440,16 @@ func (readyEvent *ReadyEvent) setReadyEventToCencentrate() {
 	readyEvent.TriggeredBy = 0
 	readyEvent.Ready = make([]int, 0)
 }
-func (placeCardEvent *PlaceCardEvent) setPlaceCardEvent(name string, triggeredBy int, discardedCards *map[int]int) {
+func (placeCardEvent *PlaceCardEvent) setPlaceCardEvent(name string, triggeredBy int, discardedCards *map[int][]int) {
 	placeCardEvent.Name = name
 	placeCardEvent.TriggeredBy = triggeredBy
 	placeCardEvent.DiscardedCard = *discardedCards
-	*discardedCards = make(map[int]int)
+	*discardedCards = make(map[int][]int)
 }
 func (placeCardEvent *PlaceCardEvent) resetPlaceCardEvent() {
 	placeCardEvent.Name = ""
 	placeCardEvent.TriggeredBy = 0
-	placeCardEvent.DiscardedCard = make(map[int]int)
+	placeCardEvent.DiscardedCard = make(map[int][]int)
 }
 func (processCardEvent *ProcessStarEvent) resetProcessStarEvent() {
 	processCardEvent.Name = ""
@@ -449,7 +458,7 @@ func (processCardEvent *ProcessStarEvent) resetProcessStarEvent() {
 	processCardEvent.ConStar = make([]int, 0)
 }
 func (processCardEvent *ProcessStarEvent) triggerProcessStarEvent(triggedby int) {
-	processCardEvent.Name = "propose-star"
+	processCardEvent.Name = "proposeStar"
 	processCardEvent.TriggeredBy = triggedby
 	appendElementIfUnique(&processCardEvent.ProStar, triggedby)
 	processCardEvent.ConStar = make([]int, 0)

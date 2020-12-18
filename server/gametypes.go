@@ -51,7 +51,7 @@ type CardsManager struct {
 	cardsInHands map[int][]int
 	CardsOnTable
 	levelCards     map[int]LevelCard
-	discardedCards map[int]int
+	discardedCards map[int][]int
 }
 
 type GameManager struct {
@@ -96,7 +96,7 @@ type PlaceCardEvent struct {
 	// playerId, 0 if useStar
 	TriggeredBy int `json:"triggeredBy, omitempty"`
 	// playerId to card number
-	DiscardedCard map[int]int `json:"discardedCard, omitempty"`
+	DiscardedCard map[int][]int `json:"discardedCard, omitempty"`
 }
 
 type ProcessStarEvent struct {
