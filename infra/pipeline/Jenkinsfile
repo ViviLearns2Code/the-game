@@ -26,6 +26,9 @@ pipeline {
         }
     }
     post {
+        fixed {
+            slackSend channel: "#the-game", message: "${env.JOB_NAME} build #${env.BUILD_NUMBER} fixed the pipeline (<${env.RUN_DISPLAY_URL}|Open>)"
+        }
         unsuccessful {
             slackSend channel: "#the-game", message: "${env.JOB_NAME} build #${env.BUILD_NUMBER} FAILED (<${env.RUN_DISPLAY_URL}|Open>)"
         }
