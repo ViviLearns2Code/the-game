@@ -75,7 +75,19 @@ func TestStart(t *testing.T) {
 			testReadyEventResult(t, c2, 2, expectedReadyEvent)
 		}
 	}
+	bobInput.ActionId = "start"
+	myGame.inputCh <- *bobInput
 
+	// bob is ready for start
+	expectedReadyEvent = ReadyEvent{"lobby", 0, []int{bobID}}
+	for i := 0; i < 2; i++ {
+		select {
+		case c1 := <-maryChannel:
+			testReadyEventResult(t, c1, 2, expectedReadyEvent)
+		case c2 := <-bobChannel:
+			testReadyEventResult(t, c2, 2, expectedReadyEvent)
+		}
+	}
 	maryInput.ActionId = "start"
 	myGame.inputCh <- *maryInput
 

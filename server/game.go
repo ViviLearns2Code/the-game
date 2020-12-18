@@ -272,9 +272,9 @@ func (cards *CardsManager) createCardsManager(nrOfPlayer int) {
 		}
 	}
 }
-func appendElementIfUnique(intslice *[]int, element int) {
+func appendElementIfUnique(intslice *([]int), element int) {
 	doesElementExist := false
-	for e := range *intslice {
+	for _, e := range *intslice {
 		if e == element {
 			doesElementExist = true
 			break
