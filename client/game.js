@@ -175,7 +175,8 @@ export class GameUI extends PIXI.Container {
 
     if (gameState.gameState?.placeCardEvent?.name === "placeCard") {
       var triggeredById = gameState.gameState.placeCardEvent.triggeredBy;
-      var cardPlayedText = new PIXI.Text('Player ' + gameState.gameState.playerNames[triggeredById] + ' played card ' + gameState.gameState.placeCardEvent.discardedCard);
+      var discardedCards = gameState.gameState.placeCardEvent.discardedCard;
+      var cardPlayedText = new PIXI.Text('Player ' + gameState.gameState.playerNames[triggeredById] + ' played card ' + discardedCards[triggeredById]);
       cardPlayedText.anchor.set(0.5);
       cardPlayedText.x = 400
       cardPlayedText.y = 250
