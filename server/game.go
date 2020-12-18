@@ -47,6 +47,18 @@ func (g *Game) Start() {
 			if playerChannel, ok := manager.subs[playerToken]; ok {
 				close(playerChannel)
 				delete(manager.subs, playerToken)
+				playID := manager.playerTokenToID[playerToken]
+				delete(manager.playerTokenToID, playerToken)
+				delete(gameState.PlayerNames, playID)
+				delete(manager.CardsManager.cardsInHands, playID)
+				delete(manager.CardsManager.discardedCards, playID)
+				if len(manager.playerTokenToID) == 2 {
+					delete(manager.CardsManager.levelCards, 9)
+					delete(manager.CardsManager.levelCards, 10)
+				} else if len(manager.playerTokenToID) == 3 {
+					delete(manager.CardsManager.levelCards, 11)
+					delete(manager.CardsManager.levelCards, 12)
+				}
 				log.Printf("New game state published")
 				convertFromGameManagerToChannelOutput(manager, gameState)
 				gameState.updateEventsAfterProcessedEvent(manager.started)
