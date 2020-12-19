@@ -361,7 +361,7 @@ func TestStart(t *testing.T) {
 	testCardsInHandsAndOnTable(t, c1, nrOfCardsMary, topCard, 2, 0, 1)
 	assert.Equal(t, c1.PlaceCardEvent, expectedPlaceCardEvent)
 	assert.Equal(t, c1.GameStateEvent, expectedGameState)
-	case c2, ok2 := <-bobChannel
+	c2, ok2 := <-bobChannel
 	assert.True(t, ok2)
 	testCardsInHandsAndOnTable(t, c2, nrOfCardsBob, topCard, 2, 0, 1)
 	assert.Equal(t, c2.PlaceCardEvent, expectedPlaceCardEvent)
