@@ -77,7 +77,7 @@ export class StarUI extends PIXI.Container {
 
     // Main switch animation
     var visibleBefore = this.targetVisible;
-    this.targetVisible = gameState.gameState?.processStarEvent?.name === "propose-star";
+    this.targetVisible = gameState.gameState?.processStarEvent?.name === "proposeStar";
 
     if (visibleBefore != this.targetVisible) {
       if (this.tween)
