@@ -437,6 +437,7 @@ func (game *GameState) updateEventsAfterProcessedEvent(started bool) {
 	}
 	game.PlaceCardEvent.resetPlaceCardEvent()
 	game.GameStateEvent.resetGameStateEvent()
+	game.err = nil
 }
 
 func (readyEvent *ReadyEvent) triggerReadyEvent(triggedby int) {
