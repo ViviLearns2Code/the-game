@@ -38,32 +38,31 @@ func (g *Game) Start() {
 				manager.playerTokenToID[subscriber.playerToken] = nextPlayerID
 				manager.subs[subscriber.playerToken] = subscriber.playerChannel
 				nextPlayerID++
-				log.Printf("New game state published")
 				convertFromGameManagerToChannelOutput(manager, gameState)
 				gameState.updateEventsAfterProcessedEvent(manager.started)
 			}
 		case playerToken := <-g.unsubCh:
-			gameState.GameStateEvent.Name = "gameOver"
+			// if playertoken not valid, ignore unsubscribe
 			if playerChannel, ok := manager.subs[playerToken]; ok {
+				gameState.GameStateEvent.Name = "gameOver"
 				close(playerChannel)
 				delete(manager.subs, playerToken)
-				playID := manager.playerTokenToID[playerToken]
-				delete(manager.playerTokenToID, playerToken)
-				delete(gameState.PlayerNames, playID)
-				delete(manager.CardsManager.cardsInHands, playID)
-				delete(manager.CardsManager.discardedCards, playID)
-				if len(manager.playerTokenToID) == 2 {
-					delete(manager.CardsManager.levelCards, 9)
-					delete(manager.CardsManager.levelCards, 10)
-				} else if len(manager.playerTokenToID) == 3 {
-					delete(manager.CardsManager.levelCards, 11)
-					delete(manager.CardsManager.levelCards, 12)
-				}
-				log.Printf("New game state published")
+				//playID := manager.playerTokenToID[playerToken]
+				//delete(manager.playerTokenToID, playerToken)
+				//delete(gameState.PlayerNames, playID)
+				//delete(manager.CardsManager.cardsInHands, playID)
+				//delete(manager.CardsManager.discardedCards, playID)
+				//if len(manager.playerTokenToID) == 2 {
+				//	delete(manager.CardsManager.levelCards, 9)
+				//	delete(manager.CardsManager.levelCards, 10)
+				//} else if len(manager.playerTokenToID) == 3 {
+				//	delete(manager.CardsManager.levelCards, 11)
+				//	delete(manager.CardsManager.levelCards, 12)
+				//}
 				convertFromGameManagerToChannelOutput(manager, gameState)
 				gameState.updateEventsAfterProcessedEvent(manager.started)
+				return
 			}
-			return
 		}
 	}
 }
@@ -409,6 +408,8 @@ func actDueToRightPlacedCard(communicator *GameManager, gameState *GameState, cu
 }
 
 func convertFromGameManagerToChannelOutput(communicator *GameManager, gameState *GameState) {
+	var isGameOver = (gameState.GameStateEvent.Name == "gameOver")
+	// sequential processing
 	for playerToken, playerChannel := range communicator.subs {
 		gameState.PlayerId = communicator.playerTokenToID[playerToken]
 		gameState.PlayerToken = playerToken
@@ -418,9 +419,9 @@ func convertFromGameManagerToChannelOutput(communicator *GameManager, gameState 
 			gameState.CardsOfPlayer.NrCardsOfOtherPlayers[playerID] = cap(cards)
 		}
 		gameState.CardsOnTable = communicator.CardsOnTable
-		select {
-		case playerChannel <- *gameState:
-			// handled by goroutine in main.go
+		playerChannel <- *gameState // handled by goroutine in main.go
+		if isGameOver {
+			close(playerChannel)
 		}
 	}
 }

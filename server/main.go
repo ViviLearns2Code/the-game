@@ -331,15 +331,33 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 }
 func listenPlayerChannel(c *websocket.Conn, ctx context.Context, myPlayerChannel chan GameState) {
 	var err error
-	log.Printf("Player channel opened...")
+	log.Printf("%v: Player channel opened...", goid())
 	for {
 		gameState, ok := <-myPlayerChannel
+		log.Printf("%v: Player channel received something...", goid())
 		if !ok {
+			log.Println("closed!")
+			return
+		}
+		log.Printf("%v: event name %s", goid(), gameState.GameStateEvent.Name)
+		log.Printf("%v: game token %s", goid(), gameState.GameToken)
+		if gameState.GameStateEvent.Name == "gameOver" {
+			log.Printf("Game over! Removing game...")
+			removeGameFromMap(gameState.GameToken)
+			output := convertGameStateToOutput(&gameState)
+			err = wsjson.Write(ctx, c, output)
+			if err != nil {
+				log.Printf("Error when writing to player channel %s for game %s", gameState.PlayerToken, gameState.GameToken)
+				c.Close(websocket.StatusInternalError, err.Error())
+				return
+			}
+			c.Close(websocket.StatusNormalClosure, "Game Over")
 			return
 		}
 		g, ok := getGameFromMap(gameState.GameToken)
 		if !ok {
 			// should never happen
+			log.Printf("%v: token incorrect", goid())
 			panic("Game returned invalid gameToken - shutting down...")
 		}
 		if gameState.err != nil {
@@ -350,12 +368,6 @@ func listenPlayerChannel(c *websocket.Conn, ctx context.Context, myPlayerChannel
 				return
 			}
 		}
-		if gameState.GameStateEvent.Name == "gameOver" {
-			log.Printf("Game over! Removing game...")
-			removeGameFromMap(gameState.GameToken)
-			return
-		}
-
 		log.Printf("New game state received")
 		output := convertGameStateToOutput(&gameState)
 		err = wsjson.Write(ctx, c, output)
