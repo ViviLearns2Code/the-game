@@ -356,22 +356,14 @@ func TestStart(t *testing.T) {
 	expectedGameState = GameStateEvent{"gameOver", "", false, false, false, true}
 	nrOfCardsMary = nrOfCardsMary - len(expectedPlaceCardEvent.DiscardedCard[maryID])
 	nrOfCardsBob = nrOfCardsBob - len(expectedPlaceCardEvent.DiscardedCard[bobID])
-	for i := 0; i < 4; i++ {
-		select {
-		case c1, ok1 := <-maryChannel:
-			if !ok1 {
-				continue
-			}
-			testCardsInHandsAndOnTable(t, c1, nrOfCardsMary, topCard, 2, 0, 1)
-			assert.Equal(t, c1.PlaceCardEvent, expectedPlaceCardEvent)
-			assert.Equal(t, c1.GameStateEvent, expectedGameState)
-		case c2, ok2 := <-bobChannel:
-			if !ok2 {
-				continue
-			}
-			testCardsInHandsAndOnTable(t, c2, nrOfCardsBob, topCard, 2, 0, 1)
-			assert.Equal(t, c2.PlaceCardEvent, expectedPlaceCardEvent)
-			assert.Equal(t, c2.GameStateEvent, expectedGameState)
-		}
-	}
+	c1, ok1 := <-maryChannel:
+	assert.True(t, ok1)
+	testCardsInHandsAndOnTable(t, c1, nrOfCardsMary, topCard, 2, 0, 1)
+	assert.Equal(t, c1.PlaceCardEvent, expectedPlaceCardEvent)
+	assert.Equal(t, c1.GameStateEvent, expectedGameState)
+	case c2, ok2 := <-bobChannel:
+	assert.True(t, ok2)
+	testCardsInHandsAndOnTable(t, c2, nrOfCardsBob, topCard, 2, 0, 1)
+	assert.Equal(t, c2.PlaceCardEvent, expectedPlaceCardEvent)
+	assert.Equal(t, c2.GameStateEvent, expectedGameState)
 }
