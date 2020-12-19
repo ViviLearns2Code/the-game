@@ -357,12 +357,12 @@ func TestStart(t *testing.T) {
 	nrOfCardsMary = nrOfCardsMary - len(expectedPlaceCardEvent.DiscardedCard[maryID])
 	nrOfCardsBob = nrOfCardsBob - len(expectedPlaceCardEvent.DiscardedCard[bobID])
 	c1, ok1 := <-maryChannel
-	assert.True(t, ok1)
+	assert.Equal(t, ok1, true)
 	testCardsInHandsAndOnTable(t, c1, nrOfCardsMary, topCard, 2, 0, 1)
 	assert.Equal(t, c1.PlaceCardEvent, expectedPlaceCardEvent)
 	assert.Equal(t, c1.GameStateEvent, expectedGameState)
 	c2, ok2 := <-bobChannel
-	assert.True(t, ok2)
+	assert.Equal(t, ok2, true)
 	testCardsInHandsAndOnTable(t, c2, nrOfCardsBob, topCard, 2, 0, 1)
 	assert.Equal(t, c2.PlaceCardEvent, expectedPlaceCardEvent)
 	assert.Equal(t, c2.GameStateEvent, expectedGameState)
