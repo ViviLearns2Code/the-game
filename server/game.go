@@ -349,11 +349,16 @@ func handleGameoverOrLevelFinish(communicator *GameManager, gameState *GameState
 func actIfUsingStar(manager *GameManager, gameState *GameState) {
 	nrOfPlayer := len(gameState.PlayerNames)
 	if nrOfPlayer == len(gameState.ProcessStarEvent.ProStar) {
+		smallestCard := 100
 		for playerIdx, cardsInHand := range manager.cardsInHands {
 			manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[:1], cardsInHand[1:]
+			if manager.discardedCards[playerIdx][0] < smallestCard {
+				smallestCard = manager.discardedCards[playerIdx][0]
+			}
 		}
 		gameState.PlaceCardEvent.setPlaceCardEvent("useStar", 0, &manager.discardedCards)
 		manager.CardsOnTable.Stars--
+		manager.CardsOnTable.TopCard = smallestCard
 		gameState.GameStateEvent.StarsDecrease = true
 		gameState.GameStateEvent.StarsIncrease = false
 		gameState.GameStateEvent.LivesIncrease = false
@@ -440,7 +445,6 @@ func (game *GameState) updateEventsAfterProcessedEvent(started bool) {
 	} else if ((game.ProcessStarEvent.Name == "agreeStar") && (len(game.ProcessStarEvent.ProStar) == len(game.PlayerNames))) || (game.ProcessStarEvent.Name == "rejectStar") {
 		game.ProcessStarEvent.resetProcessStarEvent()
 	}
-	game.PlaceCardEvent.resetPlaceCardEvent()
 	game.GameStateEvent.resetGameStateEvent()
 	game.err = nil
 }
@@ -464,11 +468,6 @@ func (placeCardEvent *PlaceCardEvent) setPlaceCardEvent(name string, triggeredBy
 	placeCardEvent.TriggeredBy = triggeredBy
 	placeCardEvent.DiscardedCard = *discardedCards
 	*discardedCards = make(map[int][]int)
-}
-func (placeCardEvent *PlaceCardEvent) resetPlaceCardEvent() {
-	placeCardEvent.Name = ""
-	placeCardEvent.TriggeredBy = 0
-	placeCardEvent.DiscardedCard = make(map[int][]int)
 }
 func (processCardEvent *ProcessStarEvent) resetProcessStarEvent() {
 	processCardEvent.Name = ""
