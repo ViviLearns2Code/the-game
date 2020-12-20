@@ -10,7 +10,7 @@ import { TestUI } from './test.js'
 
 WebFont.load({
   google: {
-    families: ['Orbitron:300,400,700']
+    families: ['Orbitron:400']
   },
   active: function() {
     main()
