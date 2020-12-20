@@ -82,7 +82,7 @@ func TestUseStar(t *testing.T) {
 	// GameStateEvent, levelup with the titel
 	// the players need cencentration
 
-	expectedGameState := GameStateEvent{"levelUp", "Initialisierung: Game Trek", false, false, false, false}
+	expectedGameState := GameStateEvent{"levelUp", "Initialization: Game Trek", false, false, false, false}
 	expectedReadyEvent = ReadyEvent{"concentrate", 0, make([]int, 0)}
 	c1, c2 = <-maryChannel, <-bobChannel
 	testCardsInHandsAndOnTable(t, c1, 1, 0, 1, 2, 1)
