@@ -69,7 +69,7 @@ func (g *Game) Start() {
 
 func NewGame() *Game {
 	return &Game{
-		token:   uuid.New().String(), //concurrent reads only!
+		token:   uuid.New().String()[:6], //concurrent reads only!
 		inputCh: make(chan InputDetails),
 		subCh:   make(chan subscription, 1),
 		unsubCh: make(chan string, 1),

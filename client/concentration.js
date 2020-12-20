@@ -4,10 +4,15 @@ export class ConcentrationUI extends PIXI.Container {
   constructor(websocket) {
     super()
 
-    this.width = 400;
-    this.height = 400;
-    this.pivot.x = this.width / 2;
-    this.pivot.y = this.height / 2;
+    this.pivot.x = 400 / 2;
+    this.pivot.y = 400 / 2;
+
+    const bkg = new PIXI.Sprite(PIXI.Texture.WHITE);
+    this.addChild(bkg);
+    bkg.x = 0;
+    bkg.y = 0;
+    bkg.width = 400;
+    bkg.height = 400;
 
     const titleText = new PIXI.Text('Concentration');
     this.addChild(titleText);
