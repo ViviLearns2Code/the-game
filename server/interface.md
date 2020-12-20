@@ -7,6 +7,7 @@ The request json has a static structure, but fields can be null depending on the
 {
   "playerName": "bob",
   "playerToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",
+  "playerIconId": 1,
   "gameToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
   "actionId": "concentrate",
   "card": null
@@ -42,6 +43,7 @@ The response json has a static structure, but fields can be null depending on th
     "playerToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
     "playerName": "bob",
     "PlayerId": 1,
+    "PlayerIconId": 1,
     "cardsOfPlayer": {
       "cardsInHand": [40, 53, 88],
       "nrCardOfOtherPlayers": {
@@ -52,6 +54,10 @@ The response json has a static structure, but fields can be null depending on th
     "playerNames": {
       "1": "bob",
       "2": "alice"
+    },
+    "playerIconIds": {
+      "1": 1,
+      "2": 1
     },
     "cardsOnTable": {
       "topCard": 10,

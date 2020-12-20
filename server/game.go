@@ -17,7 +17,7 @@ func (g *Game) Start() {
 	for {
 		select {
 		case inputDetails := <-g.inputCh:
-			log.Printf("inputDetails := <-g.inputCh")
+			//log.Printf("inputDetails := <-g.inputCh")
 			if actionCheck(inputDetails, gameState, manager) {
 				gameLogicBasedOnAction(inputDetails, manager, gameState)
 			}
@@ -27,7 +27,7 @@ func (g *Game) Start() {
 			}
 			gameState.updateEventsAfterProcessedEvent(manager.started)
 		case subscriber := <-g.subCh:
-			log.Printf("subscriber := <-g.subCh")
+			//log.Printf("subscriber := <-g.subCh")
 			if (len(gameState.PlayerNames) >= 4) || manager.started {
 				var err = NewGameError("error", "cannot join game anymore")
 				var gs = newGameState(g.token)
@@ -35,6 +35,7 @@ func (g *Game) Start() {
 				subscriber.playerChannel <- *gs
 			} else {
 				gameState.PlayerNames[nextPlayerID] = subscriber.playerName
+				gameState.PlayerIconIds[nextPlayerID] = subscriber.playerIconId
 				manager.playerTokenToID[subscriber.playerToken] = nextPlayerID
 				manager.subs[subscriber.playerToken] = subscriber.playerChannel
 				nextPlayerID++
@@ -47,18 +48,6 @@ func (g *Game) Start() {
 				gameState.GameStateEvent.Name = "gameOver"
 				close(playerChannel)
 				delete(manager.subs, playerToken)
-				//playID := manager.playerTokenToID[playerToken]
-				//delete(manager.playerTokenToID, playerToken)
-				//delete(gameState.PlayerNames, playID)
-				//delete(manager.CardsManager.cardsInHands, playID)
-				//delete(manager.CardsManager.discardedCards, playID)
-				//if len(manager.playerTokenToID) == 2 {
-				//	delete(manager.CardsManager.levelCards, 9)
-				//	delete(manager.CardsManager.levelCards, 10)
-				//} else if len(manager.playerTokenToID) == 3 {
-				//	delete(manager.CardsManager.levelCards, 11)
-				//	delete(manager.CardsManager.levelCards, 12)
-				//}
 				convertFromGameManagerToChannelOutput(manager, gameState)
 				gameState.updateEventsAfterProcessedEvent(manager.started)
 				return
@@ -80,11 +69,12 @@ func describe(i interface{}) {
 	log.Printf("(%v, %T)\n", i, i)
 }
 
-func (g *Game) Subscribe(playerName string) (string, chan GameState) {
+func (g *Game) Subscribe(playerName string, playerIconId int) (string, chan GameState) {
 	playerToken := uuid.New().String()
 	playerChannel := make(chan GameState, 1)
 	g.subCh <- subscription{
 		playerToken:   playerToken,
+		playerIconId:  playerIconId,
 		playerName:    playerName,
 		playerChannel: playerChannel,
 	}
@@ -115,6 +105,7 @@ func newGameState(gt string) *GameState {
 		PlayerId:         0,
 		CardsOfPlayer:    CardsOfPlayer{CardsInHand: make([]int, 0), NrCardsOfOtherPlayers: make(map[int]int)},
 		PlayerNames:      make(map[int]string),
+		PlayerIconIds:    make(map[int]int),
 		CardsOnTable:     CardsOnTable{TopCard: 0, Level: 0, Lives: 0, Stars: 0},
 		GameStateEvent:   GameStateEvent{Name: "", LevelTitle: "", StarsIncrease: false, StarsDecrease: false, LivesIncrease: false, LivesDecrease: false},
 		ReadyEvent:       ReadyEvent{Name: "lobby", TriggeredBy: 0, Ready: make([]int, 0)},
@@ -424,6 +415,7 @@ func convertFromGameManagerToChannelOutput(communicator *GameManager, gameState 
 		gameState.PlayerId = communicator.playerTokenToID[playerToken]
 		gameState.PlayerToken = playerToken
 		gameState.PlayerName = gameState.PlayerNames[gameState.PlayerId]
+		gameState.PlayerIconId = gameState.PlayerIconIds[gameState.PlayerId]
 		gameState.CardsOfPlayer.CardsInHand = communicator.cardsInHands[gameState.PlayerId]
 		for playerID, cards := range communicator.cardsInHands {
 			gameState.CardsOfPlayer.NrCardsOfOtherPlayers[playerID] = len(cards)
