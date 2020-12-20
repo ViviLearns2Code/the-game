@@ -368,44 +368,47 @@ func actIfUsingStar(manager *GameManager, gameState *GameState) {
 
 func wrongPlacedCard(currentCard int, manager *GameManager) bool {
 	for playerIdx, cardsInHand := range manager.cardsInHands {
-		hasSmallerOrEqualCard := false
+		hasSmallerCard := false
 		n := 0
 		for ; n < len(cardsInHand); n++ {
-			if cardsInHand[n] > currentCard {
+			if cardsInHand[n] >= currentCard {
 				break
 			} else {
-				hasSmallerOrEqualCard = true
+				hasSmallerCard = true
 			}
 		}
-		if hasSmallerOrEqualCard {
+		if hasSmallerCard {
 			manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[:n], cardsInHand[n:]
 		}
 	}
-	return len(manager.discardedCards) != 1
+	return len(manager.discardedCards) != 0
 }
 
-func actDueToWrongPlacedCard(communicator *GameManager, gameState *GameState, currplayerIdx int, currentCard int) {
-	communicator.CardsOnTable.TopCard = currentCard
-	gameState.PlaceCardEvent.setPlaceCardEvent("placeCard", currplayerIdx, &communicator.discardedCards)
-	communicator.CardsOnTable.Lives--
+func setTopCardsUpdateCurrPlayerCardsInHandAndPlaceCardEvent(manager *GameManager, gameState *GameState, currplayerIdx int, currentCard int) {
+	manager.CardsOnTable.TopCard = currentCard
+	manager.cardsInHands[currplayerIdx] = manager.cardsInHands[currplayerIdx][1:]
+	gameState.PlaceCardEvent.setPlaceCardEvent("placeCard", currplayerIdx, &manager.discardedCards)
+}
+func actDueToWrongPlacedCard(manager *GameManager, gameState *GameState, currplayerIdx int, currentCard int) {
+	setTopCardsUpdateCurrPlayerCardsInHandAndPlaceCardEvent(manager, gameState, currplayerIdx, currentCard)
+	manager.CardsOnTable.Lives--
 	gameState.GameStateEvent.LivesDecrease = true
 	gameState.GameStateEvent.LivesIncrease = false
 	gameState.GameStateEvent.StarsIncrease = false
 	gameState.GameStateEvent.StarsDecrease = false
-	if communicator.CardsOnTable.Lives == 0 {
+	if manager.CardsOnTable.Lives == 0 {
 		gameState.GameStateEvent.Name = "gameOver"
-	} else if hasAnyCardsInHand(communicator.cardsInHands) {
+	} else if hasAnyCardsInHand(manager.cardsInHands) {
 		gameState.GameStateEvent.Name = "lostLife"
 		gameState.ReadyEvent.setReadyEventToCencentrate()
 	} else {
-		handleGameoverOrLevelFinish(communicator, gameState)
+		handleGameoverOrLevelFinish(manager, gameState)
 	}
 }
-func actDueToRightPlacedCard(communicator *GameManager, gameState *GameState, currplayerIdx int, currentCard int) {
-	communicator.CardsOnTable.TopCard = currentCard
-	gameState.PlaceCardEvent.setPlaceCardEvent("placeCard", currplayerIdx, &communicator.discardedCards)
-	if !hasAnyCardsInHand(communicator.cardsInHands) {
-		handleGameoverOrLevelFinish(communicator, gameState)
+func actDueToRightPlacedCard(manager *GameManager, gameState *GameState, currplayerIdx int, currentCard int) {
+	setTopCardsUpdateCurrPlayerCardsInHandAndPlaceCardEvent(manager, gameState, currplayerIdx, currentCard)
+	if !hasAnyCardsInHand(manager.cardsInHands) {
+		handleGameoverOrLevelFinish(manager, gameState)
 	}
 }
 
@@ -418,7 +421,7 @@ func convertFromGameManagerToChannelOutput(communicator *GameManager, gameState 
 		gameState.PlayerName = gameState.PlayerNames[gameState.PlayerId]
 		gameState.CardsOfPlayer.CardsInHand = communicator.cardsInHands[gameState.PlayerId]
 		for playerID, cards := range communicator.cardsInHands {
-			gameState.CardsOfPlayer.NrCardsOfOtherPlayers[playerID] = cap(cards)
+			gameState.CardsOfPlayer.NrCardsOfOtherPlayers[playerID] = len(cards)
 		}
 		gameState.CardsOnTable = communicator.CardsOnTable
 		playerChannel <- *gameState // handled by goroutine in main.go

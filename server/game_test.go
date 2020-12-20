@@ -15,6 +15,7 @@ func testReadyEventResult(t *testing.T, gameState GameState, nrOfPlayer int, exp
 
 func testCardsInHandsAndOnTable(t *testing.T, gameState GameState, nrOfCard int, cardOnTop int, level int, lives int, stars int) {
 	assert.Equal(t, len(gameState.CardsOfPlayer.CardsInHand), nrOfCard)
+	assert.Equal(t, gameState.CardsOfPlayer.NrCardsOfOtherPlayers[gameState.PlayerId], nrOfCard)
 	assert.Equal(t, gameState.CardsOnTable.TopCard, cardOnTop)
 	assert.Equal(t, gameState.CardsOnTable.Level, level)
 	assert.Equal(t, gameState.CardsOnTable.Lives, lives)
@@ -121,23 +122,24 @@ func TestStart(t *testing.T) {
 
 	// wrong card is placed
 	// the cards smaller than placed are placed
-	var triggeredBy int
-
+	expectedPlaceCardEvent := PlaceCardEvent{"placeCard", 0, make(map[int][]int)}
 	if cardOfMary > cardOfBob {
 		maryInput.ActionId = "card"
 		maryInput.CardId = cardOfMary
 		myGame.inputCh <- *maryInput
-		triggeredBy = maryID
+		expectedPlaceCardEvent.TriggeredBy = maryID
+		expectedPlaceCardEvent.DiscardedCard[bobID] = []int{cardOfBob}
 	} else {
 		bobInput.ActionId = "card"
 		bobInput.CardId = cardOfBob
 		myGame.inputCh <- *bobInput
-		triggeredBy = bobID
+		expectedPlaceCardEvent.TriggeredBy = bobID
+		expectedPlaceCardEvent.DiscardedCard[maryID] = []int{cardOfMary}
 	}
 	// lost one life
 	// but the level is up, everyone has 2 cards in hand
 	// concentrate
-	expectedPlaceCardEvent := PlaceCardEvent{"placeCard", triggeredBy, map[int][]int{1: {cardOfMary}, 2: {cardOfBob}}}
+
 	expectedGameState = GameStateEvent{"levelUp", "Verstärkte Empathie", false, false, false, true} // lost life
 	expectedReadyEvent = ReadyEvent{"concentrate", 0, make([]int, 0)}
 
@@ -151,7 +153,6 @@ func TestStart(t *testing.T) {
 	assert.Equal(t, c2.PlaceCardEvent, expectedPlaceCardEvent)
 	assert.Equal(t, c2.GameStateEvent, expectedGameState)
 	testReadyEventResult(t, c2, 2, expectedReadyEvent)
-
 	// bob and mary are ready for level 2
 	bobInput.ActionId = "ready"
 	myGame.inputCh <- *bobInput
@@ -165,34 +166,32 @@ func TestStart(t *testing.T) {
 	c1, c2 = <-maryChannel, <-bobChannel
 	cardsOfMary = c1.CardsOfPlayer.CardsInHand
 	cardsOfBob = c2.CardsOfPlayer.CardsInHand
+	nrOfCardsMary := len(cardsOfMary)
+	nrOfCardsBob := len(cardsOfBob)
+	topCard := 0
 	// the correct card is played
 	// check cards on table and in hands
 	if cardsOfMary[0] < cardsOfBob[0] {
 		maryInput.ActionId = "card"
 		maryInput.CardId = cardsOfMary[0]
+		topCard = maryInput.CardId
 		myGame.inputCh <- *maryInput
 		expectedPlaceCardEvent.TriggeredBy = maryID
-		expectedPlaceCardEvent.DiscardedCard = map[int][]int{maryID: {maryInput.CardId}}
+		nrOfCardsMary--
 	} else {
 		bobInput.ActionId = "card"
 		bobInput.CardId = cardsOfBob[0]
+		topCard = bobInput.CardId
 		myGame.inputCh <- *bobInput
 		expectedPlaceCardEvent.TriggeredBy = bobID
-		expectedPlaceCardEvent.DiscardedCard = map[int][]int{bobID: {bobInput.CardId}}
+		nrOfCardsBob--
 	}
-
-	nrOfCardsMary := 2
-	if expectedPlaceCardEvent.TriggeredBy == maryID {
-		nrOfCardsMary--
-	}
-	topCard := expectedPlaceCardEvent.DiscardedCard[expectedPlaceCardEvent.TriggeredBy][0]
-	nrOfCardsBob := 3 - nrOfCardsMary
+	expectedPlaceCardEvent.DiscardedCard = make(map[int][]int)
 	c1, c2 = <-maryChannel, <-bobChannel
 	testCardsInHandsAndOnTable(t, c1, nrOfCardsMary, topCard, 2, 1, 1)
 	assert.Equal(t, c1.PlaceCardEvent, expectedPlaceCardEvent)
 	testCardsInHandsAndOnTable(t, c2, nrOfCardsBob, topCard, 2, 1, 1)
 	assert.Equal(t, c2.PlaceCardEvent, expectedPlaceCardEvent)
-
 	// concentration triggered by mary
 	maryInput.CardId = 0
 	maryInput.ActionId = "concentrate"
@@ -247,12 +246,12 @@ func TestStart(t *testing.T) {
 	testReadyEventResult(t, c1, 2, expectedReadyEvent)
 	testReadyEventResult(t, c2, 2, expectedReadyEvent)
 	// place wrong card, game over
+	expectedPlaceCardEvent.DiscardedCard = make(map[int][]int)
 	if cardsOfMary[2-nrOfCardsMary] > cardsOfBob[2-nrOfCardsBob] {
 		maryInput.ActionId = "card"
 		maryInput.CardId = cardsOfMary[2-nrOfCardsMary]
 		myGame.inputCh <- *maryInput
 		expectedPlaceCardEvent.TriggeredBy = maryID
-		expectedPlaceCardEvent.DiscardedCard = map[int][]int{maryID: {cardsOfMary[2-nrOfCardsMary]}}
 		topCard = cardsOfMary[2-nrOfCardsMary]
 		for n := 2 - nrOfCardsBob; n < 2; n++ {
 			if cardsOfBob[n] < maryInput.CardId {
@@ -261,13 +260,15 @@ func TestStart(t *testing.T) {
 				break
 			}
 		}
+		nrOfCardsMary--
+		nrOfCardsBob = nrOfCardsBob - len(expectedPlaceCardEvent.DiscardedCard[bobID])
 	} else {
 		bobInput.ActionId = "card"
 		bobInput.CardId = cardsOfBob[2-nrOfCardsBob]
 		myGame.inputCh <- *bobInput
 		expectedPlaceCardEvent.TriggeredBy = bobID
-		expectedPlaceCardEvent.DiscardedCard = map[int][]int{bobID: {cardsOfBob[2-nrOfCardsBob]}}
 		topCard = cardsOfBob[2-nrOfCardsBob]
+
 		for n := 2 - nrOfCardsMary; n < 2; n++ {
 			if cardsOfMary[n] < bobInput.CardId {
 				expectedPlaceCardEvent.DiscardedCard[maryID] = append(expectedPlaceCardEvent.DiscardedCard[maryID], cardsOfMary[n])
@@ -275,11 +276,11 @@ func TestStart(t *testing.T) {
 				break
 			}
 		}
+		nrOfCardsBob--
+		nrOfCardsMary = nrOfCardsMary - len(expectedPlaceCardEvent.DiscardedCard[maryID])
 	}
 
 	expectedGameState = GameStateEvent{"gameOver", "", false, false, false, true}
-	nrOfCardsMary = nrOfCardsMary - len(expectedPlaceCardEvent.DiscardedCard[maryID])
-	nrOfCardsBob = nrOfCardsBob - len(expectedPlaceCardEvent.DiscardedCard[bobID])
 	c1, ok1 := <-maryChannel
 	assert.Equal(t, ok1, true)
 	testCardsInHandsAndOnTable(t, c1, nrOfCardsMary, topCard, 2, 0, 1)
