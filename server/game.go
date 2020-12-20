@@ -350,7 +350,7 @@ func actIfUsingStar(manager *GameManager, gameState *GameState) {
 	nrOfPlayer := len(gameState.PlayerNames)
 	if nrOfPlayer == len(gameState.ProcessStarEvent.ProStar) {
 		for playerIdx, cardsInHand := range manager.cardsInHands {
-			manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[:0], cardsInHand[1:]
+			manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[:1], cardsInHand[1:]
 		}
 		gameState.PlaceCardEvent.setPlaceCardEvent("useStar", 0, &manager.discardedCards)
 		manager.CardsOnTable.Stars--
