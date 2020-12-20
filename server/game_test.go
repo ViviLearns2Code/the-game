@@ -31,7 +31,7 @@ func TestUseStar(t *testing.T) {
 		PlayerName: "mary",
 		ActionId:   "create",
 	}
-	maryToken, maryChannel := myGame.Subscribe("mary")
+	maryToken, maryChannel := myGame.Subscribe("mary", 1)
 	maryInput.PlayerToken = maryToken
 	maryInput.GameToken = myGame.token
 	maryID := 1
@@ -45,7 +45,7 @@ func TestUseStar(t *testing.T) {
 		PlayerName: "bob",
 		ActionId:   "join",
 	}
-	bobToken, bobChannel := myGame.Subscribe("bob")
+	bobToken, bobChannel := myGame.Subscribe("bob", 2)
 	bobInput.PlayerToken = bobToken
 	bobInput.GameToken = myGame.token
 	bobID := 2
@@ -153,7 +153,7 @@ func TestStart(t *testing.T) {
 		PlayerName: "mary",
 		ActionId:   "create",
 	}
-	maryToken, maryChannel := myGame.Subscribe("mary")
+	maryToken, maryChannel := myGame.Subscribe("mary", 1)
 	maryInput.PlayerToken = maryToken
 	maryInput.GameToken = myGame.token
 	maryID := 1
@@ -167,7 +167,7 @@ func TestStart(t *testing.T) {
 		PlayerName: "bob",
 		ActionId:   "join",
 	}
-	bobToken, bobChannel := myGame.Subscribe("bob")
+	bobToken, bobChannel := myGame.Subscribe("bob", 2)
 	bobInput.PlayerToken = bobToken
 	bobInput.GameToken = myGame.token
 	bobID := 2

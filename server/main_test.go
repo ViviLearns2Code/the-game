@@ -35,8 +35,9 @@ func TestServer(t *testing.T) {
 
 	// correct input
 	var payloadRequest = &InputDetails{
-		PlayerName: "mary",
-		ActionId:   "create",
+		PlayerName:   "mary",
+		PlayerIconId: 1,
+		ActionId:     "create",
 	}
 	err = wsjson.Write(ctx, c, payloadRequest)
 	if err != nil {
@@ -49,6 +50,8 @@ func TestServer(t *testing.T) {
 		t.Fatal(err.Error())
 		return
 	}
+	assert.Equal(t, payloadResponse.GameState.PlayerName, "mary")
+	assert.Equal(t, payloadResponse.GameState.PlayerIconId, 1)
 	// wrong input
 	payloadRequest = &InputDetails{
 		PlayerName: "mary",

@@ -178,14 +178,16 @@ func extractDetails(raw map[string]interface{}) InputDetails {
 	var gameToken, _ = raw["gameToken"].(string)
 	var playerToken, _ = raw["playerToken"].(string)
 	var playerName, _ = raw["playerName"].(string)
+	var playerIconId, _ = raw["playerIconId"].(float64)
 	var actionId, _ = raw["actionId"].(string)
 	var cardId, _ = raw["cardId"].(float64)
 	var details = InputDetails{
-		GameToken:   gameToken,
-		PlayerToken: playerToken,
-		PlayerName:  playerName,
-		ActionId:    actionId,
-		CardId:      int(cardId),
+		GameToken:    gameToken,
+		PlayerToken:  playerToken,
+		PlayerName:   playerName,
+		ActionId:     actionId,
+		PlayerIconId: int(playerIconId),
+		CardId:       int(cardId),
 	}
 	return details
 }
@@ -201,13 +203,8 @@ func isValidGame(gameToken string, gameTokenPrev string) bool {
 func isValidPlayer(playerToken string, playerTokenPrev string) bool {
 	return (playerToken == playerTokenPrev)
 }
-func validateInput(gameDetails InputDetails, myGame Game, myPlayerToken string, myPlayerName string) bool {
+func validateInput(gameDetails InputDetails, myGame Game, myPlayerToken string, myPlayerName string, myPlayerIconId int) bool {
 	log.Printf("Checking inputs...")
-	//log.Printf("playerToken %v : %v", myPlayerToken, gameDetails.PlayerToken)
-	//log.Printf("playerName %v : %v", myPlayerName, gameDetails.PlayerName)
-	//log.Printf("gameToken %v : %v", myGame.token, gameDetails.GameToken)
-	//log.Printf("actionId %v", gameDetails.ActionId)
-	//log.Printf("cardId %v", gameDetails.CardId)
 	var ok = true
 	// universal checks
 	if gameDetails.PlayerName == "" {
@@ -215,6 +212,10 @@ func validateInput(gameDetails InputDetails, myGame Game, myPlayerToken string, 
 		return ok
 	}
 	if !isValidAction(gameDetails.ActionId) {
+		ok = false
+		return ok
+	}
+	if (gameDetails.PlayerIconId < 0) && (gameDetails.PlayerIconId > 4) {
 		ok = false
 		return ok
 	}
@@ -263,6 +264,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	var myPlayerToken string
+	var myPlayerIconId int
 	var myPlayerName string
 	var myGame Game
 	var myPlayerChannel chan GameState
@@ -279,7 +281,7 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		gameDetails := extractDetails(data)
-		inputOk := validateInput(gameDetails, myGame, myPlayerToken, myPlayerName)
+		inputOk := validateInput(gameDetails, myGame, myPlayerToken, myPlayerName, myPlayerIconId)
 		if !inputOk {
 			output := convertGameStateToOutput(newGameState(myGame.token))
 			output.ErrorMsg = "Wrong input"
@@ -305,10 +307,11 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 		case "create":
 			log.Printf("Creating game...")
 			myPlayerName = gameDetails.PlayerName
+			myPlayerIconId = gameDetails.PlayerIconId
 			myGame = *NewGame()
 			addGameToMap(myGame.token, myGame)
 			go myGame.Start()
-			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName)
+			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName, myPlayerIconId)
 			gameDetails.PlayerToken = myPlayerToken
 			gameDetails.GameToken = myGame.token
 			go listenPlayerChannel(c, ctx, myPlayerChannel)
@@ -316,7 +319,8 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Joining game...")
 			myGame, _ = getGameFromMap(gameDetails.GameToken)
 			myPlayerName = gameDetails.PlayerName
-			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName)
+			myPlayerIconId = gameDetails.PlayerIconId
+			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName, myPlayerIconId)
 			gameDetails.PlayerToken = myPlayerToken
 			go listenPlayerChannel(c, ctx, myPlayerChannel)
 		case "leave":
