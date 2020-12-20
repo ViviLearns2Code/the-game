@@ -36,10 +36,21 @@ export class GameUI extends PIXI.Container {
     this.handText.x = 200;
     this.handText.y = 350;
 
-    this.playerNames = new PIXI.Text('', Styles.infoStyle);
-    this.addChild(this.playerNames);
-    this.playerNames.x = 400;
-    this.playerNames.y = 100;
+    this.playerIcons = [5];
+    this.playerStateText = [5];
+    for (var i = 1; i < 5; i++) {
+      this.playerStateText[i] = new PIXI.Text('', Styles.infoStyle);
+      this.addChild(this.playerStateText[i]);
+      this.playerStateText[i].x = 460;
+      this.playerStateText[i].y = 100 + i * 60;
+
+      this.playerIcons[i] = new PIXI.Sprite(PIXI.Texture.WHITE);
+      this.addChild(this.playerIcons[i]);
+      this.playerIcons[i].x = 400;
+      this.playerIcons[i].y = 95 + i * 60;
+      this.playerIcons[i].width = 50;
+      this.playerIcons[i].height = 50;
+    }
 
     this.proposeStarButton = new PIXI.Text('Prop. Star', Styles.buttonStyle);
     this.addChild(this.proposeStarButton);
@@ -160,11 +171,19 @@ export class GameUI extends PIXI.Container {
     this.topCardText.text = "TopCard " + gameState.gameState.cardsOnTable.topCard;
     this.handText.text = "Hand " + gameState.gameState.cardsOfPlayer.cardsInHand;
 
-    this.playerNames.text = ""
-    for (const [key, value] of Object.entries(gameState.gameState.playerNames)) {
-      this.playerNames.text += value
-      this.playerNames.text += "(" + gameState.gameState.cardsOfPlayer.nrCardOfOtherPlayers[key] + " cards)"
-      this.playerNames.text += "\n"
+    for (var playerId = 1; playerId <= 4; playerId++) {
+      if (playerId in gameState.gameState.playerNames) {
+        this.playerStateText[playerId].visible = true;
+        this.playerStateText[playerId].text = gameState.gameState.playerNames[playerId];
+        this.playerStateText[playerId].text += " (" + gameState.gameState.cardsOfPlayer.nrCardOfOtherPlayers[playerId] + " cards)";
+
+        this.playerIcons[playerId].visible = true;
+        var iconId = gameState.gameState.playerIconIds[playerId];
+        this.playerIcons[playerId].texture = PIXI.Texture.from(`artefacts/${iconId}.png`);
+      } else {
+        this.playerStateText[playerId].visible = false;
+        this.playerIcons[playerId].visible = false;
+      }
     }
 
     this.proposeStarButton.visible = gameState.gameState.cardsOnTable.stars > 0;

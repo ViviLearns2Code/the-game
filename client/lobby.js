@@ -113,7 +113,8 @@ export class LobbyUI extends PIXI.Container {
         this.playerStateText[playerId].text += " " + (gameState.gameState.readyEvent.ready.includes(parseInt(playerId)) ? "ready" : "not ready")
 
         this.playerIcons[playerId].visible = true;
-        this.playerIcons[playerId].texture = PIXI.Texture.from(`artefacts/1.png`);
+        var iconId = gameState.gameState.playerIconIds[playerId];
+        this.playerIcons[playerId].texture = PIXI.Texture.from(`artefacts/${iconId}.png`);
       } else {
         this.playerStateText[playerId].visible = false;
         this.playerIcons[playerId].visible = false;
