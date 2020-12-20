@@ -1,31 +1,32 @@
 import * as PIXI from './pixi.mjs';
 import * as PIXITEXTINPUT from './PIXI.TextInput.js';
+import { Styles } from './style.js'
 
 export class LobbyUI extends PIXI.Container {
   constructor(websocket) {
     super()
 
-    const titleText = new PIXI.Text('The Game\'s Lobby');
+    const titleText = new PIXI.Text('Silent Lobby', Styles.headingStyle);
     this.addChild(titleText);
     titleText.x = 50;
     titleText.y = 100;
-
+    new PIXI.Text
     this.tokenText = new PIXITEXTINPUT.TextInput({
       input: {fontSize: '25px'},
       box: {fill: 0xEEEEEE}
     })
-    this.tokenText.x = 50
-    this.tokenText.y = 150
+    this.tokenText.x = 50;
+    this.tokenText.y = 200;
     //this.tokenText.disabled = true;
     this.addChild(this.tokenText)
 
-    this.playerStatesText = new PIXI.Text('');
+    this.playerStatesText = new PIXI.Text('', Styles.infoStyle);
     this.addChild(this.playerStatesText);
     this.playerStatesText.x = 50;
-    this.playerStatesText.y = 200;
+    this.playerStatesText.y = 250;
 
 
-    const readyButton = new PIXI.Text('Ready');
+    const readyButton = new PIXI.Text('Ready', Styles.buttonStyle);
     this.addChild(readyButton);
     readyButton.x = 50;
     readyButton.y = 400;

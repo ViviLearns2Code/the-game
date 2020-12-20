@@ -1,33 +1,35 @@
 import * as PIXI from './pixi.mjs';
+import { Styles } from './style.js'
 
 export class ConcentrationUI extends PIXI.Container {
   constructor(websocket) {
     super()
 
-    this.pivot.x = 400 / 2;
+    this.pivot.x = 600 / 2;
     this.pivot.y = 400 / 2;
 
     const bkg = new PIXI.Sprite(PIXI.Texture.WHITE);
     this.addChild(bkg);
+    bkg.tint = Styles.popupTint;
     bkg.x = 0;
     bkg.y = 0;
-    bkg.width = 400;
+    bkg.width = 600;
     bkg.height = 400;
 
-    const titleText = new PIXI.Text('Concentration');
+    const titleText = new PIXI.Text('Concentration', Styles.headingStyle);
     this.addChild(titleText);
-    titleText.x = 0;
-    titleText.y = 0;
+    titleText.x = 50;
+    titleText.y = 50;
 
-    this.playerStatesText = new PIXI.Text('');
+    this.playerStatesText = new PIXI.Text('', Styles.infoStyle);
     this.addChild(this.playerStatesText);
-    this.playerStatesText.x = 0;
-    this.playerStatesText.y = 50;
+    this.playerStatesText.x = 50;
+    this.playerStatesText.y = 200;
 
 
-    const readyButton = new PIXI.Text('Ready');
+    const readyButton = new PIXI.Text('Ready', Styles.buttonStyle);
     this.addChild(readyButton);
-    readyButton.x = 0;
+    readyButton.x = 50;
     readyButton.y = 350;
 
     readyButton.interactive = true;

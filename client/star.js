@@ -1,34 +1,36 @@
 import * as PIXI from './pixi.mjs';
+import { Styles } from './style.js'
 
 export class StarUI extends PIXI.Container {
   constructor(websocket) {
     super()
 
-    this.pivot.x = 400 / 2;
+    this.pivot.x = 600 / 2;
     this.pivot.y = 400 / 2;
 
     const bkg = new PIXI.Sprite(PIXI.Texture.WHITE);
     this.addChild(bkg);
+    bkg.tint = Styles.popupTint;
     bkg.x = 0;
     bkg.y = 0;
-    bkg.width = 400;
+    bkg.width = 600;
     bkg.height = 400;
 
-    const titleText = new PIXI.Text('Star proposed');
+    const titleText = new PIXI.Text('Star proposed', Styles.headingStyle);
     this.addChild(titleText);
-    titleText.x = 0;
-    titleText.y = 0;
+    titleText.x = 50;
+    titleText.y = 50;
 
-    this.playerStatesText = new PIXI.Text('');
+    this.playerStatesText = new PIXI.Text('', Styles.infoStyle);
     this.addChild(this.playerStatesText);
-    this.playerStatesText.x = 0;
-    this.playerStatesText.y = 50;
+    this.playerStatesText.x = 50;
+    this.playerStatesText.y = 100;
 
 
-    const rejectButton = new PIXI.Text('Reject');
+    const rejectButton = new PIXI.Text('Reject', Styles.buttonStyle);
     this.addChild(rejectButton);
-    rejectButton.x = 0;
-    rejectButton.y = 300;
+    rejectButton.x = 350;
+    rejectButton.y = 350;
 
     rejectButton.interactive = true;
     rejectButton.buttonMode = true;
@@ -50,9 +52,9 @@ export class StarUI extends PIXI.Container {
       websocket.send(text);
     }
 
-    const acceptButton = new PIXI.Text('Accept');
+    const acceptButton = new PIXI.Text('Accept', Styles.buttonStyle);
     this.addChild(acceptButton);
-    acceptButton.x = 0;
+    acceptButton.x = 50;
     acceptButton.y = 350;
 
     acceptButton.interactive = true;

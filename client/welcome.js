@@ -1,11 +1,12 @@
 import * as PIXI from './pixi.mjs';
 import * as PIXITEXTINPUT from './PIXI.TextInput.js';
+import { Styles } from './style.js'
 
 export class WelcomeUI extends PIXI.Container {
   constructor(websocket) {
     super()
 
-    const titleText = new PIXI.Text('The Game');
+    const titleText = new PIXI.Text('Silence', Styles.headingStyle);
     this.addChild(titleText);
     titleText.x = 50;
     titleText.y = 100;
@@ -14,8 +15,8 @@ export class WelcomeUI extends PIXI.Container {
       input: {fontSize: '25px'},
       box: {fill: 0xEEEEEE}
     })
-    inputName.x = 25
-    inputName.y = 200
+    inputName.x = 50;
+    inputName.y = 200;
     inputName.placeholder = 'Player name...'
     this.addChild(inputName)
     inputName.focus()
@@ -30,9 +31,9 @@ export class WelcomeUI extends PIXI.Container {
     this.addChild(inputGameToken)
 
 
-    const hostButton = new PIXI.Text('Host Game');
+    const hostButton = new PIXI.Text('Host Game', Styles.buttonStyle);
     this.addChild(hostButton);
-    hostButton.x = 25;
+    hostButton.x = 50;
     hostButton.y = 300;
 
     hostButton.interactive = true;
@@ -54,7 +55,7 @@ export class WelcomeUI extends PIXI.Container {
       websocket.send(message);
     }
 
-    const joinButton = new PIXI.Text('Join Game');
+    const joinButton = new PIXI.Text('Join Game', Styles.buttonStyle);
     this.addChild(joinButton);
     joinButton.x = 400;
     joinButton.y = 300;

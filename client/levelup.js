@@ -1,25 +1,27 @@
 import * as PIXI from './pixi.mjs';
+import { Styles } from './style.js'
 
 export class LevelUpUI extends PIXI.Container {
   constructor(websocket) {
     super()
 
-    this.pivot.x = 400 / 2;
+    this.pivot.x = 600 / 2;
     this.pivot.y = 400 / 2;
 
     const bkg = new PIXI.Sprite(PIXI.Texture.WHITE);
     this.addChild(bkg);
+    bkg.tint = Styles.popupTint;
     bkg.x = 0;
     bkg.y = 0;
-    bkg.width = 400;
+    bkg.width = 600;
     bkg.height = 400;
 
-    this.titleText = new PIXI.Text('');
+    this.titleText = new PIXI.Text('', Styles.headingStyle);
     this.addChild(this.titleText);
     this.titleText.x = 0;
     this.titleText.y = 0;
 
-    this.perksText = new PIXI.Text('');
+    this.perksText = new PIXI.Text('', Styles.infoStyle);
     this.addChild(this.perksText);
     this.perksText.x = 0;
     this.perksText.y = 50;
@@ -52,7 +54,7 @@ export class LevelUpUI extends PIXI.Container {
       })
       .start()
     var tweenHide = new TWEEN.Tween(coords)
-      .to({scale: 0}, 2000)
+      .to({scale: 0}, 4000)
       .easing(TWEEN.Easing.Quadratic.In)
       .onUpdate(() => {
         self.scale.x = coords.scale;
