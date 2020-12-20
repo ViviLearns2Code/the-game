@@ -245,29 +245,29 @@ func (cards *CardsManager) createCardsManager(nrOfPlayer int) {
 	for i := 1; i <= maxLevel; i++ {
 		switch i {
 		case 1:
-			cards.levelCards[1] = LevelCard{"Erhöhte Sensibilitat", false, false}
+			cards.levelCards[1] = LevelCard{"Initialisierung: Game Trek", false, false}
 		case 2:
-			cards.levelCards[2] = LevelCard{"Verstärkte Empathie", false, true}
+			cards.levelCards[2] = LevelCard{"Systems: online", false, true}
 		case 3:
-			cards.levelCards[3] = LevelCard{"Erweitertes Bewusstsein", true, false}
+			cards.levelCards[3] = LevelCard{"Taktisches Maöver 1.A", true, false}
 		case 4:
-			cards.levelCards[4] = LevelCard{"Sub-kognitive Wahrnehmung", false, false}
+			cards.levelCards[4] = LevelCard{"Vereinigte Föderation", false, false}
 		case 5:
-			cards.levelCards[5] = LevelCard{"Gruppenbewusstsein", false, true}
+			cards.levelCards[5] = LevelCard{"Schwarzer Alarm", false, true}
 		case 6:
-			cards.levelCards[6] = LevelCard{"Gedankenwahrenehmung", true, false}
+			cards.levelCards[6] = LevelCard{"Gemeinsamer Sprung", true, false}
 		case 7:
-			cards.levelCards[7] = LevelCard{"Telepathische Kommnikation", false, false}
+			cards.levelCards[7] = LevelCard{"Mein Geist zu deinem Geist, meine Gedanken zu deinen Gedanken", false, false}
 		case 8:
-			cards.levelCards[8] = LevelCard{"Auserkörperliche Präsenz", false, true}
+			cards.levelCards[8] = LevelCard{"Absolute Gedankenverschmelzung", false, true}
 		case 9:
-			cards.levelCards[9] = LevelCard{"Quantenbewusstsein", true, false}
+			cards.levelCards[9] = LevelCard{"Kollektivbewusstsein", true, false}
 		case 10:
-			cards.levelCards[10] = LevelCard{"Abspaltung vom Raum-Zeit-Kontinuum", false, false}
+			cards.levelCards[10] = LevelCard{"Absolut synchroner Gemeingeist", false, false}
 		case 11:
-			cards.levelCards[11] = LevelCard{"Metaphysische Harmonie", false, false}
+			cards.levelCards[11] = LevelCard{"Metamorphose des Geistes: Abspaltung der Raum-Zeit", false, false}
 		case 12:
-			cards.levelCards[12] = LevelCard{"Verschmelzung von Geist und Materie", false, false}
+			cards.levelCards[12] = LevelCard{"Q-Kontinuum", false, false}
 		}
 	}
 }
