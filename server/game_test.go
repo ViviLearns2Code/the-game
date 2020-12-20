@@ -83,7 +83,7 @@ func TestStart(t *testing.T) {
 	// GameStateEvent, levelup with the titel
 	// the players need cencentration
 
-	expectedGameState := GameStateEvent{"levelUp", "Erhöhte Sensibilitat", false, false, false, false}
+	expectedGameState := GameStateEvent{"levelUp", "Initialisierung: Game Trek", false, false, false, false}
 	expectedReadyEvent = ReadyEvent{"concentrate", 0, make([]int, 0)}
 	c1, c2 = <-maryChannel, <-bobChannel
 	testCardsInHandsAndOnTable(t, c1, 1, 0, 1, 2, 1)
@@ -140,7 +140,7 @@ func TestStart(t *testing.T) {
 	// but the level is up, everyone has 2 cards in hand
 	// concentrate
 
-	expectedGameState = GameStateEvent{"levelUp", "Verstärkte Empathie", false, false, false, true} // lost life
+	expectedGameState = GameStateEvent{"levelUp", "Systems: online", false, false, false, true} // lost life
 	expectedReadyEvent = ReadyEvent{"concentrate", 0, make([]int, 0)}
 
 	c1, c2 = <-maryChannel, <-bobChannel
