@@ -386,7 +386,7 @@ func wrongPlacedCard(currentCard int, manager *GameManager) bool {
 
 func setTopCardsUpdateCurrPlayerCardsInHandAndPlaceCardEvent(manager *GameManager, gameState *GameState, currplayerIdx int, currentCard int) {
 	manager.CardsOnTable.TopCard = currentCard
-	manager.cardsInHands[currplayerIdx] = manager.cardsInHands[currplayerIdx][1:]
+	manager.discardedCards[currplayerIdx], manager.cardsInHands[currplayerIdx] = manager.cardsInHands[currplayerIdx][:1], manager.cardsInHands[currplayerIdx][1:]
 	gameState.PlaceCardEvent.setPlaceCardEvent("placeCard", currplayerIdx, &manager.discardedCards)
 }
 func actDueToWrongPlacedCard(manager *GameManager, gameState *GameState, currplayerIdx int, currentCard int) {

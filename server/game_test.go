@@ -214,12 +214,14 @@ func TestStart(t *testing.T) {
 		maryInput.CardId = cardOfMary
 		myGame.inputCh <- *maryInput
 		expectedPlaceCardEvent.TriggeredBy = maryID
+		expectedPlaceCardEvent.DiscardedCard[maryID] = []int{cardOfMary}
 		expectedPlaceCardEvent.DiscardedCard[bobID] = []int{cardOfBob}
 	} else {
 		bobInput.ActionId = "card"
 		bobInput.CardId = cardOfBob
 		myGame.inputCh <- *bobInput
 		expectedPlaceCardEvent.TriggeredBy = bobID
+		expectedPlaceCardEvent.DiscardedCard[bobID] = []int{cardOfBob}
 		expectedPlaceCardEvent.DiscardedCard[maryID] = []int{cardOfMary}
 	}
 	// lost one life
@@ -244,16 +246,16 @@ func TestStart(t *testing.T) {
 	myGame.inputCh <- *bobInput
 	<-maryChannel
 	<-bobChannel
-
-	var cardsOfMary []int
-	var cardsOfBob []int
 	maryInput.ActionId = "ready"
 	myGame.inputCh <- *maryInput
 	c1, c2 = <-maryChannel, <-bobChannel
+	var cardsOfMary []int
+	var cardsOfBob []int
 	cardsOfMary = c1.CardsOfPlayer.CardsInHand
 	cardsOfBob = c2.CardsOfPlayer.CardsInHand
 	nrOfCardsMary := len(cardsOfMary)
 	nrOfCardsBob := len(cardsOfBob)
+	expectedPlaceCardEvent.DiscardedCard = make(map[int][]int)
 	topCard := 0
 	// the correct card is played
 	// check cards on table and in hands
@@ -263,6 +265,7 @@ func TestStart(t *testing.T) {
 		topCard = maryInput.CardId
 		myGame.inputCh <- *maryInput
 		expectedPlaceCardEvent.TriggeredBy = maryID
+		expectedPlaceCardEvent.DiscardedCard[maryID] = []int{cardsOfMary[0]}
 		nrOfCardsMary--
 	} else {
 		bobInput.ActionId = "card"
@@ -270,9 +273,9 @@ func TestStart(t *testing.T) {
 		topCard = bobInput.CardId
 		myGame.inputCh <- *bobInput
 		expectedPlaceCardEvent.TriggeredBy = bobID
+		expectedPlaceCardEvent.DiscardedCard[bobID] = []int{cardsOfBob[0]}
 		nrOfCardsBob--
 	}
-	expectedPlaceCardEvent.DiscardedCard = make(map[int][]int)
 	c1, c2 = <-maryChannel, <-bobChannel
 	testCardsInHandsAndOnTable(t, c1, nrOfCardsMary, topCard, 2, 1, 1)
 	assert.Equal(t, c1.PlaceCardEvent, expectedPlaceCardEvent)
@@ -338,6 +341,7 @@ func TestStart(t *testing.T) {
 		maryInput.CardId = cardsOfMary[2-nrOfCardsMary]
 		myGame.inputCh <- *maryInput
 		expectedPlaceCardEvent.TriggeredBy = maryID
+		expectedPlaceCardEvent.DiscardedCard[maryID] = []int{topCard}
 		topCard = cardsOfMary[2-nrOfCardsMary]
 		for n := 2 - nrOfCardsBob; n < 2; n++ {
 			if cardsOfBob[n] < maryInput.CardId {
@@ -354,7 +358,7 @@ func TestStart(t *testing.T) {
 		myGame.inputCh <- *bobInput
 		expectedPlaceCardEvent.TriggeredBy = bobID
 		topCard = cardsOfBob[2-nrOfCardsBob]
-
+		expectedPlaceCardEvent.DiscardedCard[bobID] = []int{topCard}
 		for n := 2 - nrOfCardsMary; n < 2; n++ {
 			if cardsOfMary[n] < bobInput.CardId {
 				expectedPlaceCardEvent.DiscardedCard[maryID] = append(expectedPlaceCardEvent.DiscardedCard[maryID], cardsOfMary[n])
