@@ -110,7 +110,7 @@ type ProcessStarEvent struct {
 }
 
 type GameStateEvent struct {
-	// gameOver, lostLife, levelUp
+	// gameOver, lostLife, levelUp, gameWon
 	Name          string `json:"name"`
 	LevelTitle    string `json:"levelTitle"`
 	StarsIncrease bool   `json:"starsIncrease"`

@@ -33,7 +33,7 @@ The response json has a static structure, but fields can be null depending on th
 |readyEvent| lobby, concentrate |
 |placeCardEvent| placeCard, useStar |
 |processStarEvent| proposeStar, agreeStar, rejectStar |
-|gameStateEvent| gameOver, lostLife, levelUp |
+|gameStateEvent| gameOver, lostLife, levelUp, gameWon |
 
 ```json
 {

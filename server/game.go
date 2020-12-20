@@ -4,6 +4,7 @@ import (
 	"log"
 	"math/rand"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,6 +22,7 @@ func (g *Game) Start(isBorg bool) {
 			if actionCheck(inputDetails, gameState, manager) {
 				gameLogicBasedOnAction(inputDetails, manager, gameState)
 			}
+			changeNamesToBorgsIfNeeded(manager, gameState, isBorg)
 			convertFromGameManagerToChannelOutput(manager, gameState)
 			if gameState.GameStateEvent.Name == "gameOver" {
 				return
@@ -55,7 +57,17 @@ func (g *Game) Start(isBorg bool) {
 		}
 	}
 }
-
+func changeNamesToBorgsIfNeeded(manager *GameManager, gameState *GameState, isBorg bool) {
+	if isBorg && manager.CardsOnTable.Level == 7 {
+		str := "of"
+		str += strconv.Itoa(len(gameState.PlayerNames))
+		for playerID, _ := range gameState.PlayerName {
+			str1 := strconv.Itoa(playerID)
+			newname := str1 + str
+			gameState.PlayerNames[playerID] = newname
+		}
+	}
+}
 func NewGame() *Game {
 	return &Game{
 		token:   uuid.New().String()[:6], //concurrent reads only!
@@ -327,12 +339,13 @@ func levelFinish(communicator *GameManager, gameState *GameState) {
 	gameState.GameStateEvent.LevelTitle = communicator.levelCards[communicator.CardsOnTable.Level].levelTitle
 	communicator.CardsOnTable.TopCard = 0
 }
-func handleGameoverOrLevelFinish(communicator *GameManager, gameState *GameState) {
-	if communicator.CardsOnTable.Level == len(communicator.levelCards) {
-		gameState.GameStateEvent.Name = "gameOver"
+func handleGameoverOrLevelFinish(manager *GameManager, gameState *GameState) {
+	if manager.CardsOnTable.Level == len(manager.levelCards) {
+		gameState.GameStateEvent.Name = "gameWon"
 	} else {
-		levelFinish(communicator, gameState)
-		communicator.CardsManager.handoutCards(len(gameState.PlayerNames))
+		levelFinish(manager, gameState)
+
+		manager.CardsManager.handoutCards(len(gameState.PlayerNames))
 		gameState.ReadyEvent.setReadyEventToCencentrate()
 	}
 }
@@ -407,20 +420,19 @@ func actDueToRightPlacedCard(manager *GameManager, gameState *GameState, currpla
 		handleGameoverOrLevelFinish(manager, gameState)
 	}
 }
-
-func convertFromGameManagerToChannelOutput(communicator *GameManager, gameState *GameState) {
+func convertFromGameManagerToChannelOutput(manager *GameManager, gameState *GameState) {
 	var isGameOver = (gameState.GameStateEvent.Name == "gameOver")
 	// sequential processing
-	for playerToken, playerChannel := range communicator.subs {
-		gameState.PlayerId = communicator.playerTokenToID[playerToken]
+	for playerToken, playerChannel := range manager.subs {
+		gameState.PlayerId = manager.playerTokenToID[playerToken]
 		gameState.PlayerToken = playerToken
 		gameState.PlayerName = gameState.PlayerNames[gameState.PlayerId]
 		gameState.PlayerIconId = gameState.PlayerIconIds[gameState.PlayerId]
-		gameState.CardsOfPlayer.CardsInHand = communicator.cardsInHands[gameState.PlayerId]
-		for playerID, cards := range communicator.cardsInHands {
+		gameState.CardsOfPlayer.CardsInHand = manager.cardsInHands[gameState.PlayerId]
+		for playerID, cards := range manager.cardsInHands {
 			gameState.CardsOfPlayer.NrCardsOfOtherPlayers[playerID] = len(cards)
 		}
-		gameState.CardsOnTable = communicator.CardsOnTable
+		gameState.CardsOnTable = manager.CardsOnTable
 		playerChannel <- *gameState // handled by goroutine in main.go
 		if isGameOver {
 			close(playerChannel)
