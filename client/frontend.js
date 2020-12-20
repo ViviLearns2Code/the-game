@@ -5,6 +5,7 @@ import { LobbyUI } from './lobby.js'
 import { GameUI } from './game.js'
 import { ConcentrationUI } from './concentration.js'
 import { StarUI } from './star.js'
+import { LevelUpUI } from './levelup.js'
 import { TestUI } from './test.js'
 
 var websocket = new WebSocket("wss://game-backend.linusseelinger.de/socket");
@@ -24,11 +25,18 @@ app.stage.addChild(gameContainer);
 
 var starContainer = new StarUI(websocket);
 app.stage.addChild(starContainer);
+starContainer.x = app.renderer.width / 2;
+starContainer.y = app.renderer.height / 2;
 
 var concentrationContainer = new ConcentrationUI(websocket)
 app.stage.addChild(concentrationContainer)
-concentrationContainer.x = app.stage.width / 2;
-concentrationContainer.y = app.stage.height / 2;
+concentrationContainer.x = app.renderer.width / 2;
+concentrationContainer.y = app.renderer.height / 2;
+
+var levelUpContainer = new LevelUpUI(websocket)
+app.stage.addChild(levelUpContainer)
+levelUpContainer.x = app.renderer.width / 2;
+levelUpContainer.y = app.renderer.height / 2;
 
 var testContainer = new TestUI(parseGameStateGlobal)
 app.stage.addChild(testContainer)
@@ -40,6 +48,7 @@ function parseGameStateGlobal(gameState) {
   gameContainer.parseGameState(gameState);
   concentrationContainer.parseGameState(gameState);
   starContainer.parseGameState(gameState);
+  levelUpContainer.parseGameState(gameState);
   testContainer.parseGameState(gameState);
 
   if (gameState.errorMsg === "") {
