@@ -89,7 +89,7 @@ export class ConcentrationUI extends PIXI.Container {
         .start()
     }
 
-    if (!this.targetVisible)
+    if (!inConcentrationPhase)
       return
 
     this.playerName = gameState.gameState.playerName;
