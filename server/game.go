@@ -203,7 +203,7 @@ func gameLogicBasedOnAction(raw InputDetails, manager *GameManager, gameState *G
 				gameState.err = NewGameError("warning", "wrong action: you have a smaller card")
 			} else {
 				if wrongPlacedCard(raw.CardId, manager) {
-					actDueToWrongPlacedCard(manager, gameState, currplayerIdx)
+					actDueToWrongPlacedCard(manager, gameState, currplayerIdx, raw.CardId)
 				} else {
 					actDueToRightPlacedCard(manager, gameState, currplayerIdx, raw.CardId)
 				}
@@ -368,22 +368,24 @@ func actIfUsingStar(manager *GameManager, gameState *GameState) {
 
 func wrongPlacedCard(currentCard int, manager *GameManager) bool {
 	for playerIdx, cardsInHand := range manager.cardsInHands {
-		hasSmallerCard := false
+		hasSmallerOrEqualCard := false
 		n := 0
 		for ; n < len(cardsInHand); n++ {
 			if cardsInHand[n] > currentCard {
 				break
 			} else {
-				hasSmallerCard = true
+				hasSmallerOrEqualCard = true
 			}
 		}
-		if hasSmallerCard {
+		if hasSmallerOrEqualCard {
 			manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[:n], cardsInHand[n:]
 		}
 	}
 	return len(manager.discardedCards) != 1
 }
-func actDueToWrongPlacedCard(communicator *GameManager, gameState *GameState, currplayerIdx int) {
+
+func actDueToWrongPlacedCard(communicator *GameManager, gameState *GameState, currplayerIdx int, currentCard int) {
+	communicator.CardsOnTable.TopCard = currentCard
 	gameState.PlaceCardEvent.setPlaceCardEvent("placeCard", currplayerIdx, &communicator.discardedCards)
 	communicator.CardsOnTable.Lives--
 	gameState.GameStateEvent.LivesDecrease = true
