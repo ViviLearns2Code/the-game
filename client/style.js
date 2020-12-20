@@ -7,7 +7,7 @@ export class Styles {
     dropShadowBlur: 5,
     dropShadowColor: "#eaeaea",
     fill: "white",
-    fontFamily: "Arial Black",
+    fontFamily: "Orbitron",
     fontSize: 50
   });
   static buttonStyle = new PIXI.TextStyle({
@@ -16,7 +16,7 @@ export class Styles {
     dropShadowBlur: 5,
     dropShadowColor: "#eaeaea",
     fill: "white",
-    fontFamily: "Arial Black"
+    fontFamily: "Orbitron"
   });
   static infoStyle = new PIXI.TextStyle({
     dropShadow: true,
@@ -24,7 +24,7 @@ export class Styles {
     dropShadowBlur: 5,
     dropShadowColor: "#eaeaea",
     fill: "white",
-    fontFamily: "Arial Black"
+    fontFamily: "Orbitron"
   });
   static popupTint = "0x222222"
 }
