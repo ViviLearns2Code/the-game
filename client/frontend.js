@@ -48,8 +48,8 @@ function main() {
   levelUpContainer.x = app.renderer.width / 2;
   levelUpContainer.y = app.renderer.height / 2;
 
-  var testContainer = new TestUI(parseGameStateGlobal)
-  app.stage.addChild(testContainer)
+  //var testContainer = new TestUI(parseGameStateGlobal)
+  //app.stage.addChild(testContainer)
 
 
   function parseGameStateGlobal(gameState) {
@@ -59,7 +59,7 @@ function main() {
     concentrationContainer.parseGameState(gameState);
     starContainer.parseGameState(gameState);
     levelUpContainer.parseGameState(gameState);
-    testContainer.parseGameState(gameState);
+    //testContainer.parseGameState(gameState);
 
     if (gameState.errorMsg === "") {
       return;
