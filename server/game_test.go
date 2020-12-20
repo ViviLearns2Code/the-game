@@ -341,8 +341,8 @@ func TestStart(t *testing.T) {
 		maryInput.CardId = cardsOfMary[2-nrOfCardsMary]
 		myGame.inputCh <- *maryInput
 		expectedPlaceCardEvent.TriggeredBy = maryID
-		expectedPlaceCardEvent.DiscardedCard[maryID] = []int{topCard}
 		topCard = cardsOfMary[2-nrOfCardsMary]
+		expectedPlaceCardEvent.DiscardedCard[maryID] = []int{topCard}
 		for n := 2 - nrOfCardsBob; n < 2; n++ {
 			if cardsOfBob[n] < maryInput.CardId {
 				expectedPlaceCardEvent.DiscardedCard[bobID] = append(expectedPlaceCardEvent.DiscardedCard[bobID], cardsOfBob[n])
