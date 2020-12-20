@@ -52,6 +52,7 @@ func TestServer(t *testing.T) {
 	}
 	assert.Equal(t, payloadResponse.GameState.PlayerName, "mary")
 	assert.Equal(t, payloadResponse.GameState.PlayerIconId, 1)
+	assert.Equal(t, payloadResponse.GameState.PlayerIconIds[1], 1)
 	// wrong input
 	payloadRequest = &InputDetails{
 		PlayerName: "mary",
