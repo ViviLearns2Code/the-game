@@ -6,6 +6,34 @@ export class WelcomeUI extends PIXI.Container {
   constructor(websocket) {
     super()
 
+    this.icons = [];
+    this.selectedIcon = Math.floor(Math.random() * 4.999);
+
+    var self = this;
+
+    for (var i = 0; i < 5; i++) {
+      var icon = new PIXI.Sprite.from(`artefacts/${i}.png`);
+      icon.anchor.set(0.5)
+
+      icon.interactive = true;
+      icon.buttonMode = true;
+      var generateHandler = function(iteration){
+        return function(){
+          self.selectedIcon = iteration;
+          self.updateIconsScale();
+        }
+      }
+      icon.on('pointerdown', generateHandler(i));
+
+      this.addChild(icon)
+      icon.x = 100 + i*150;
+      icon.y = 425;
+      icon.width = 100;
+      icon.height = 100;
+      this.icons.push(icon)
+    }
+    this.updateIconsScale();
+
     const titleText = new PIXI.Text('Silence', Styles.headingStyle);
     this.addChild(titleText);
     titleText.x = 50;
@@ -48,6 +76,7 @@ export class WelcomeUI extends PIXI.Container {
           "playerToken": "",
           "actionId": "create",
           "playerName": inputName.text,
+          "playerIconId": self.selectedIcon,
           "cardId": "",
         }
       );
@@ -72,6 +101,7 @@ export class WelcomeUI extends PIXI.Container {
           "playerToken": "",
           "actionId": "join",
           "playerName": inputName.text,
+          "playerIconId": self.selectedIcon,
           "cardId": "",
         }
       );
@@ -79,6 +109,24 @@ export class WelcomeUI extends PIXI.Container {
       websocket.send(message);
     }
 
+  }
+
+  updateIconsScale() {
+    for (var j = 0; j < 5; j++) {
+      var coords = {scale: this.icons[j].width}
+      var self = this;
+      var generateHandler = function(coords, j){
+        return function(){
+          self.icons[j].width = coords.scale;
+          self.icons[j].height = coords.scale;
+        }
+      }
+      var tween = new TWEEN.Tween(coords)
+        .to({scale: j === this.selectedIcon ? 140 : 100}, 500)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .onUpdate(generateHandler(coords, j))
+        .start()
+    }
   }
 
   parseGameState(gameState) {

@@ -6,30 +6,40 @@ export class LobbyUI extends PIXI.Container {
   constructor(websocket) {
     super()
 
-    const titleText = new PIXI.Text('Silent Lobby', Styles.headingStyle);
+    const titleText = new PIXI.Text('Silent Launchpad', Styles.headingStyle);
     this.addChild(titleText);
     titleText.x = 50;
-    titleText.y = 100;
+    titleText.y = 50;
     new PIXI.Text
     this.tokenText = new PIXITEXTINPUT.TextInput({
       input: {fontSize: '25px'},
       box: {fill: 0xEEEEEE}
     })
     this.tokenText.x = 50;
-    this.tokenText.y = 200;
-    //this.tokenText.disabled = true;
+    this.tokenText.y = 150;
     this.addChild(this.tokenText)
 
-    this.playerStatesText = new PIXI.Text('', Styles.infoStyle);
-    this.addChild(this.playerStatesText);
-    this.playerStatesText.x = 50;
-    this.playerStatesText.y = 250;
+    this.playerIcons = [5];
+    this.playerStateText = [5];
+    for (var i = 1; i < 5; i++) {
+      this.playerStateText[i] = new PIXI.Text('', Styles.infoStyle);
+      this.addChild(this.playerStateText[i]);
+      this.playerStateText[i].x = 110;
+      this.playerStateText[i].y = 180 + i * 60;
+
+      this.playerIcons[i] = new PIXI.Sprite(PIXI.Texture.WHITE);
+      this.addChild(this.playerIcons[i]);
+      this.playerIcons[i].x = 50;
+      this.playerIcons[i].y = 175 + i * 60;
+      this.playerIcons[i].width = 50;
+      this.playerIcons[i].height = 50;
+    }
 
 
     const readyButton = new PIXI.Text('Ready', Styles.buttonStyle);
     this.addChild(readyButton);
     readyButton.x = 50;
-    readyButton.y = 400;
+    readyButton.y = 500;
 
     readyButton.interactive = true;
     readyButton.buttonMode = true;
@@ -96,11 +106,18 @@ export class LobbyUI extends PIXI.Container {
 
     this.tokenText.text = gameState.gameState.gameToken;
 
-    this.playerStatesText.text = "";
-    for (const [playerId, playerName] of Object.entries(gameState.gameState.playerNames)) {
-      this.playerStatesText.text += playerName
-      this.playerStatesText.text += " " + (gameState.gameState.readyEvent.ready.includes(parseInt(playerId)) ? "ready" : "not ready")
-      this.playerStatesText.text += "\n"
+    for (var playerId = 1; playerId <= 4; playerId++) {
+      if (playerId in gameState.gameState.playerNames) {
+        this.playerStateText[playerId].visible = true;
+        this.playerStateText[playerId].text = gameState.gameState.playerNames[playerId];
+        this.playerStateText[playerId].text += " " + (gameState.gameState.readyEvent.ready.includes(parseInt(playerId)) ? "ready" : "not ready")
+
+        this.playerIcons[playerId].visible = true;
+        this.playerIcons[playerId].texture = PIXI.Texture.from(`artefacts/1.png`);
+      } else {
+        this.playerStateText[playerId].visible = false;
+        this.playerIcons[playerId].visible = false;
+      }
     }
 
   }
