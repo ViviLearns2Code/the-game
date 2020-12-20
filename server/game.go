@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (g *Game) Start() {
+func (g *Game) Start(isBorg bool) {
 	// game loop
 	var manager = newGameManager()
 	var gameState = newGameState(g.token)

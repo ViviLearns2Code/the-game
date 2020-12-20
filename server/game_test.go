@@ -25,7 +25,7 @@ func testCardsInHandsAndOnTable(t *testing.T, gameState GameState, nrOfCard int,
 func TestUseStar(t *testing.T) {
 	var myGame Game
 	myGame = *NewGame()
-	go myGame.Start()
+	go myGame.Start(false)
 
 	var maryInput = &InputDetails{
 		PlayerName: "mary",
@@ -145,7 +145,7 @@ func TestStart(t *testing.T) {
 
 	var myGame Game
 	myGame = *NewGame()
-	go myGame.Start()
+	go myGame.Start(false)
 
 	// mary create room
 	// tet result only 1 player in lobby
