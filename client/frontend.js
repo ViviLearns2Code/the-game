@@ -11,7 +11,7 @@ import { TestUI } from './test.js'
 var websocket = new WebSocket("wss://game-backend.linusseelinger.de/socket");
 
 
-const app = new PIXI.Application({ backgroundColor: 0x1099bb });
+const app = new PIXI.Application({ backgroundColor: 0x000000 });
 document.body.appendChild(app.view);
 
 var welcomeContainer = new WelcomeUI(websocket);

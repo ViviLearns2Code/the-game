@@ -1,46 +1,47 @@
 import * as PIXI from './pixi.mjs';
+import { Styles } from './style.js'
 "use strict";
 
 export class GameUI extends PIXI.Container {
   constructor(websocket) {
     super()
 
-    const titleText = new PIXI.Text('The Game');
+    const titleText = new PIXI.Text('Silence', Styles.headingStyle);
     this.addChild(titleText);
     titleText.x = 50;
-    titleText.y = 100;
+    titleText.y = 50;
 
-    this.levelText = new PIXI.Text('0');
+    this.levelText = new PIXI.Text('0', Styles.infoStyle);
     this.addChild(this.levelText);
     this.levelText.x = 200;
-    this.levelText.y = 100;
+    this.levelText.y = 150;
 
-    this.livesText = new PIXI.Text('0');
+    this.livesText = new PIXI.Text('0', Styles.infoStyle);
     this.addChild(this.livesText);
     this.livesText.x = 200;
-    this.livesText.y = 150;
+    this.livesText.y = 200;
 
-    this.starsText = new PIXI.Text('0');
+    this.starsText = new PIXI.Text('0', Styles.infoStyle);
     this.addChild(this.starsText);
     this.starsText.x = 200;
-    this.starsText.y = 200;
+    this.starsText.y = 250;
 
-    this.topCardText = new PIXI.Text('0');
+    this.topCardText = new PIXI.Text('0', Styles.infoStyle);
     this.addChild(this.topCardText);
     this.topCardText.x = 200;
-    this.topCardText.y = 250;
+    this.topCardText.y = 300;
 
-    this.handText = new PIXI.Text('0');
+    this.handText = new PIXI.Text('0', Styles.infoStyle);
     this.addChild(this.handText);
     this.handText.x = 200;
-    this.handText.y = 300;
+    this.handText.y = 350;
 
-    this.playerNames = new PIXI.Text('');
+    this.playerNames = new PIXI.Text('', Styles.infoStyle);
     this.addChild(this.playerNames);
     this.playerNames.x = 400;
     this.playerNames.y = 100;
 
-    this.proposeStarButton = new PIXI.Text('Prop. Star');
+    this.proposeStarButton = new PIXI.Text('Prop. Star', Styles.buttonStyle);
     this.addChild(this.proposeStarButton);
     this.proposeStarButton.x = 50;
     this.proposeStarButton.y = 450;
@@ -64,7 +65,7 @@ export class GameUI extends PIXI.Container {
       websocket.send(text);
     }
 
-    const proposeConcentrationButton = new PIXI.Text('Prop. Concentration');
+    const proposeConcentrationButton = new PIXI.Text('Prop. Concentration', Styles.buttonStyle);
     this.addChild(proposeConcentrationButton);
     proposeConcentrationButton.x = 50;
     proposeConcentrationButton.y = 400;
@@ -86,7 +87,7 @@ export class GameUI extends PIXI.Container {
       websocket.send(text);
     }
 
-    this.playCardButton = new PIXI.Text('Play card');
+    this.playCardButton = new PIXI.Text('Play card', Styles.buttonStyle);
     this.addChild(this.playCardButton);
     this.playCardButton.x = 50;
     this.playCardButton.y = 500;
@@ -176,7 +177,7 @@ export class GameUI extends PIXI.Container {
     if (gameState.gameState?.placeCardEvent?.name === "placeCard") {
       var triggeredById = gameState.gameState.placeCardEvent.triggeredBy;
       var discardedCards = gameState.gameState.placeCardEvent.discardedCard;
-      var cardPlayedText = new PIXI.Text('Player ' + gameState.gameState.playerNames[triggeredById] + ' played card ' + discardedCards[triggeredById]);
+      var cardPlayedText = new PIXI.Text('Player ' + gameState.gameState.playerNames[triggeredById] + ' played card ' + discardedCards[triggeredById], Styles.infoStyle);
       cardPlayedText.anchor.set(0.5);
       cardPlayedText.x = 400
       cardPlayedText.y = 250
