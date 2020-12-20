@@ -30,7 +30,7 @@ export class WelcomeUI extends PIXI.Container {
     this.addChild(inputGameToken)
 
 
-    const hostButton = new PIXI.Text('Host New Game');
+    const hostButton = new PIXI.Text('Host Game');
     this.addChild(hostButton);
     hostButton.x = 25;
     hostButton.y = 300;
@@ -54,7 +54,7 @@ export class WelcomeUI extends PIXI.Container {
       websocket.send(message);
     }
 
-    const joinButton = new PIXI.Text('Join New Game');
+    const joinButton = new PIXI.Text('Join Game');
     this.addChild(joinButton);
     joinButton.x = 400;
     joinButton.y = 300;

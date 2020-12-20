@@ -251,6 +251,7 @@ export class GameUI extends PIXI.Container {
         })
         .onComplete(()=>{
           self.removeChild(gameOverText);
+          location.reload();
         })
         .start()
     }
