@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -248,6 +249,17 @@ func validateInput(gameDetails InputDetails, myGame Game, myPlayerToken string, 
 	}
 	return ok
 }
+
+func rollDice() (isBorg bool) {
+	random := rand.Float64()
+	if random < 0.5 {
+		isBorg = false
+	} else {
+		isBorg = true
+	}
+	return isBorg
+}
+
 func runGame(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Connection established...")
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
@@ -306,11 +318,12 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 		switch gameDetails.ActionId {
 		case "create":
 			log.Printf("Creating game...")
+			isBorg := rollDice()
 			myPlayerName = gameDetails.PlayerName
 			myPlayerIconId = gameDetails.PlayerIconId
 			myGame = *NewGame()
 			addGameToMap(myGame.token, myGame)
-			go myGame.Start()
+			go myGame.Start(isBorg)
 			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName, myPlayerIconId)
 			gameDetails.PlayerToken = myPlayerToken
 			gameDetails.GameToken = myGame.token
