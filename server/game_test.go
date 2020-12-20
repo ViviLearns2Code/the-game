@@ -22,8 +22,7 @@ func testCardsInHandsAndOnTable(t *testing.T, gameState GameState, nrOfCard int,
 	assert.Equal(t, gameState.CardsOnTable.Stars, stars)
 }
 
-func TestStart(t *testing.T) {
-
+func TestUseStar(t *testing.T) {
 	var myGame Game
 	myGame = *NewGame()
 	go myGame.Start()
@@ -120,6 +119,93 @@ func TestStart(t *testing.T) {
 	cardOfBob = c2.CardsOfPlayer.CardsInHand[0]
 	testReadyEventResult(t, c2, 2, expectedReadyEvent)
 
+	//propose
+	bobInput.ActionId = "propose-star"
+	myGame.inputCh <- *bobInput
+	expectedProcessStarEvent := ProcessStarEvent{"proposeStar", bobID, []int{bobID}, make([]int, 0)}
+	c1, c2 = <-maryChannel, <-bobChannel
+	assert.Equal(t, c1.ProcessStarEvent, expectedProcessStarEvent)
+	assert.Equal(t, c2.ProcessStarEvent, expectedProcessStarEvent)
+	// agree by mary
+	maryInput.ActionId = "agree-star"
+	myGame.inputCh <- *maryInput
+	expectedProcessStarEvent = ProcessStarEvent{"agreeStar", bobID, []int{bobID, maryID}, make([]int, 0)}
+	expectedReadyEvent = ReadyEvent{"concentrate", 0, make([]int, 0)}
+	c1, c2 = <-maryChannel, <-bobChannel
+	assert.Equal(t, c1.ProcessStarEvent, expectedProcessStarEvent)
+	assert.Equal(t, c2.ProcessStarEvent, expectedProcessStarEvent)
+	testReadyEventResult(t, c1, 2, expectedReadyEvent)
+	testReadyEventResult(t, c2, 2, expectedReadyEvent)
+	expectedPlaceCardEvent := PlaceCardEvent{"useStar", 0, map[int][]int{1: {cardOfMary}, 2: {cardOfBob}}}
+	assert.Equal(t, c1.PlaceCardEvent, expectedPlaceCardEvent)
+	assert.Equal(t, c2.PlaceCardEvent, expectedPlaceCardEvent)
+}
+
+func TestStart(t *testing.T) {
+
+	var myGame Game
+	myGame = *NewGame()
+	go myGame.Start()
+
+	// mary create room
+	// tet result only 1 player in lobby
+	var maryInput = &InputDetails{
+		PlayerName: "mary",
+		ActionId:   "create",
+	}
+	maryToken, maryChannel := myGame.Subscribe("mary")
+	maryInput.PlayerToken = maryToken
+	maryInput.GameToken = myGame.token
+	maryID := 1
+	maryGameState := <-maryChannel
+	assert.Equal(t, len(maryGameState.PlayerNames), 1)
+	assert.Equal(t, maryGameState.ReadyEvent.Name, "lobby")
+
+	// bob joint the room
+	// test result, 2 players are in lobby
+	var bobInput = &InputDetails{
+		PlayerName: "bob",
+		ActionId:   "join",
+	}
+	bobToken, bobChannel := myGame.Subscribe("bob")
+	bobInput.PlayerToken = bobToken
+	bobInput.GameToken = myGame.token
+	bobID := 2
+	<-maryChannel
+	<-bobChannel
+
+	// bob is ready for start
+
+	bobInput.ActionId = "start"
+	myGame.inputCh <- *bobInput
+	<-maryChannel
+	<-bobChannel
+	// mary is ready for start
+	// mary is ready for start --> game starts
+	// bob and mary has 1 card in hand, level 1, lives 2, stars1
+	// GameStateEvent, levelup with the titel
+	// the players need cencentration
+	maryInput.ActionId = "start"
+	myGame.inputCh <- *maryInput
+	<-maryChannel
+	<-bobChannel
+
+	// bob is ready for play
+	// GameStateEvent is cleaned up
+	bobInput.ActionId = "ready"
+	myGame.inputCh <- *bobInput
+	<-maryChannel
+	<-bobChannel
+
+	// mary is ready for play --> all are ready
+	maryInput.ActionId = "ready"
+	myGame.inputCh <- *maryInput
+
+	var cardOfMary, cardOfBob int
+	c1, c2 := <-maryChannel, <-bobChannel
+	cardOfMary = c1.CardsOfPlayer.CardsInHand[0]
+	cardOfBob = c2.CardsOfPlayer.CardsInHand[0]
+
 	// wrong card is placed
 	// the cards smaller than placed are placed
 	expectedPlaceCardEvent := PlaceCardEvent{"placeCard", 0, make(map[int][]int)}
@@ -140,8 +226,8 @@ func TestStart(t *testing.T) {
 	// but the level is up, everyone has 2 cards in hand
 	// concentrate
 
-	expectedGameState = GameStateEvent{"levelUp", "Systems: online", false, false, false, true} // lost life
-	expectedReadyEvent = ReadyEvent{"concentrate", 0, make([]int, 0)}
+	expectedGameState := GameStateEvent{"levelUp", "Systems: online", false, false, false, true} // lost life
+	expectedReadyEvent := ReadyEvent{"concentrate", 0, make([]int, 0)}
 
 	c1, c2 = <-maryChannel, <-bobChannel
 
