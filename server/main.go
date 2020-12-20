@@ -251,6 +251,7 @@ func validateInput(gameDetails InputDetails, myGame Game, myPlayerToken string, 
 }
 
 func rollDice() (isBorg bool) {
+	rand.Seed(time.Now().UnixNano())
 	random := rand.Float64()
 	if random < 0.5 {
 		isBorg = false
