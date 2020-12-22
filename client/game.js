@@ -65,11 +65,13 @@ export class GameUI extends PIXI.Container {
       this.coplayers[i].text.anchor.set(0.5);
       this.coplayers[i].text.x = xList[i];
       this.coplayers[i].text.y = yList[i];
+      this.coplayers[i].text.visible = false;
 
       this.addChild(this.coplayers[i].discarded);
       this.coplayers[i].discarded.anchor.set(0.5);
       this.coplayers[i].discarded.x = xList[i];
       this.coplayers[i].discarded.y = yList[i]+100;
+      this.coplayers[i].discarded.visible = false;
 
       this.addChild(this.coplayers[i].icon);
       this.coplayers[i].icon.x = xList[i];
@@ -77,6 +79,7 @@ export class GameUI extends PIXI.Container {
       this.coplayers[i].icon.width = 50;
       this.coplayers[i].icon.height = 50;
       this.coplayers[i].icon.anchor.set(0.5);
+      this.coplayers[i].icon.visible = false;
     }
 
     this.proposeStarButton = new PIXI.Text('Star!', Styles.buttonStyle);
@@ -195,7 +198,7 @@ export class GameUI extends PIXI.Container {
     this.levelText.text = "⚑ " + gameState.gameState.cardsOnTable.level;
     this.livesText.text = "❤ " + gameState.gameState.cardsOnTable.lives;
     this.starsText.text = "★ " + gameState.gameState.cardsOnTable.stars;
-    this.topCardText.text = "TopCard " + gameState.gameState.cardsOnTable.topCard;
+    this.topCardText.text = "Top " + gameState.gameState.cardsOnTable.topCard;
     this.handText.text = gameState.gameState.cardsOfPlayer.cardsInHand;
 
     var coplayersIndex = 0;
@@ -229,11 +232,6 @@ export class GameUI extends PIXI.Container {
         coplayersIndex += 1;
       }
     };
-    while(coplayersIndex < 3){
-      this.coplayers[coplayersIndex].text.visible = false;
-      this.coplayers[coplayersIndex].discarded.visible = false;
-      this.coplayers[coplayersIndex].icon.visible = false;
-    }
 
     this.proposeStarButton.visible = gameState.gameState.cardsOnTable.stars > 0;
     this.playCardButton.visible = gameState.gameState.cardsOfPlayer.cardsInHand.length > 0;
