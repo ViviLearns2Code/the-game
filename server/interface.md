@@ -26,7 +26,7 @@ Possible `actionIds`
 * reject-star
 
 ## Response
-The response json has a static structure, but fields can be null depending on the context.
+The response json has a static structure.
 
 | event | possible values |
 |:------|:----------------|
@@ -42,8 +42,8 @@ The response json has a static structure, but fields can be null depending on th
     "gameToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",
     "playerToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
     "playerName": "bob",
-    "PlayerId": 1,
-    "PlayerIconId": 1,
+    "playerId": 1,
+    "playerIconId": 1,
     "cardsOfPlayer": {
       "cardsInHand": [40, 53, 88],
       "nrCardOfOtherPlayers": {
@@ -76,18 +76,20 @@ The response json has a static structure, but fields can be null depending on th
     "readyEvent": {
       "name": "",
       "triggeredBy": 0,
-      "ready": null
+      "ready": []
     },
     "placeCardEvent": {
-      "name": "",
-      "triggeredBy": 0,
-      "discardedCard": null
+      "name": "placeCard",
+      "triggeredBy": 1,
+      "discardedCard": {
+        "1": [10]
+      }
     },
     "processingStarEvent": {
       "name": "",
       "triggeredBy": 0,
-      "proStar": null,
-      "conStar": null
+      "proStar": [],
+      "conStar": []
     }
   }
 }
