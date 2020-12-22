@@ -10,7 +10,7 @@ The request json has a static structure, but fields can be null depending on the
   "playerIconId": 1,
   "gameToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
   "actionId": "concentrate",
-  "card": null
+  "card": 0
 }
 ```
 Possible `actionIds`
