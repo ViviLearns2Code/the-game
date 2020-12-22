@@ -124,8 +124,8 @@ type GameState struct {
 	GameToken     string         `json:"gameToken"`
 	PlayerToken   string         `json:"playerToken"`
 	PlayerName    string         `json:"playerName"`
-	PlayerId      int            `json:"PlayerId"`
-	PlayerIconId  int            `json:"PlayerIconId"`
+	PlayerId      int            `json:"playerId"`
+	PlayerIconId  int            `json:"playerIconId"`
 	CardsOfPlayer CardsOfPlayer  `json:"cardsOfPlayer"`
 	PlayerIconIds map[int]int    `json:"playerIconIds"`
 	PlayerNames   map[int]string `json:"playerNames"`
