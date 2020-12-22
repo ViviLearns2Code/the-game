@@ -449,6 +449,10 @@ func (game *GameState) updateEventsAfterProcessedEvent(started bool) {
 	} else if ((game.ProcessStarEvent.Name == "agreeStar") && (len(game.ProcessStarEvent.ProStar) == len(game.PlayerNames))) || (game.ProcessStarEvent.Name == "rejectStar") {
 		game.ProcessStarEvent.resetProcessStarEvent()
 	}
+	// keep placeCardEvent info for useStar, otherwise concentration event afterwards will overwrite it
+	if game.PlaceCardEvent.Name == "placeCard" {
+		game.PlaceCardEvent.resetPlaceCardEvent()
+	}
 	game.GameStateEvent.resetGameStateEvent()
 	game.err = nil
 }
@@ -472,6 +476,11 @@ func (placeCardEvent *PlaceCardEvent) setPlaceCardEvent(name string, triggeredBy
 	placeCardEvent.TriggeredBy = triggeredBy
 	placeCardEvent.DiscardedCard = *discardedCards
 	*discardedCards = make(map[int][]int)
+}
+func (placeCardEvent *PlaceCardEvent) resetPlaceCardEvent() {
+	placeCardEvent.Name = ""
+	placeCardEvent.TriggeredBy = 0
+	placeCardEvent.DiscardedCard = make(map[int][]int)
 }
 func (processCardEvent *ProcessStarEvent) resetProcessStarEvent() {
 	processCardEvent.Name = ""
