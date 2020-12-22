@@ -209,7 +209,7 @@ export class GameUI extends PIXI.Container {
         var iconId = gameState.gameState.playerIconId;
         this.playerIcon.texture = PIXI.Texture.from(`artefacts/${iconId}.png`);
         // render player's discarded card for star
-        if (id in gameState.gameState.placeCardEvent.discardedCard) {
+        if (id in gameState.gameState.placeCardEvent.discardedCard && gameState.gameState.gameStateEvent.name != "levelUp") {
           this.discardedText.visible = true;
           this.discardedText.text = "discard: " + gameState.gameState.placeCardEvent.discardedCard[id];
         } else {
