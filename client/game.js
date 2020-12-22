@@ -13,49 +13,76 @@ export class GameUI extends PIXI.Container {
 
     this.levelText = new PIXI.Text('0', Styles.infoStyle);
     this.addChild(this.levelText);
-    this.levelText.x = 200;
-    this.levelText.y = 150;
+    this.levelText.x = 400;
+    this.levelText.y = 75;
 
     this.livesText = new PIXI.Text('0', Styles.infoStyle);
     this.addChild(this.livesText);
-    this.livesText.x = 200;
-    this.livesText.y = 200;
+    this.livesText.x = 500;
+    this.livesText.y = 75;
 
     this.starsText = new PIXI.Text('0', Styles.infoStyle);
     this.addChild(this.starsText);
-    this.starsText.x = 200;
-    this.starsText.y = 250;
+    this.starsText.x = 600;
+    this.starsText.y = 75;
 
-    this.topCardText = new PIXI.Text('0', Styles.infoStyle);
+    this.topCardText = new PIXI.Text('0', Styles.importantStyle);
     this.addChild(this.topCardText);
-    this.topCardText.x = 200;
+    this.topCardText.anchor.set(0.5);
+    this.topCardText.x = 400;
     this.topCardText.y = 300;
 
     this.handText = new PIXI.Text('0', Styles.infoStyle);
     this.addChild(this.handText);
-    this.handText.x = 200;
-    this.handText.y = 350;
+    this.handText.anchor.set(0.5);
+    this.handText.x = 400;
+    this.handText.y = 460;
 
-    this.playerIcons = [5];
-    this.playerStateText = [5];
-    for (var i = 1; i < 5; i++) {
-      this.playerStateText[i] = new PIXI.Text('', Styles.infoStyle);
-      this.addChild(this.playerStateText[i]);
-      this.playerStateText[i].x = 460;
-      this.playerStateText[i].y = 100 + i * 60;
+    this.discardedText = new PIXI.Text('', Styles.smallStyle);
+    this.addChild(this.discardedText);
+    this.discardedText.anchor.set(0.5);
+    this.discardedText.x = 400;
+    this.discardedText.y = 500;
 
-      this.playerIcons[i] = new PIXI.Sprite(PIXI.Texture.WHITE);
-      this.addChild(this.playerIcons[i]);
-      this.playerIcons[i].x = 400;
-      this.playerIcons[i].y = 95 + i * 60;
-      this.playerIcons[i].width = 50;
-      this.playerIcons[i].height = 50;
+    this.playerIcon = new PIXI.Sprite(PIXI.Texture.WHITE);
+    this.playerIcon.anchor.set(0.5);
+    this.addChild(this.playerIcon);
+    this.playerIcon.x = 400;
+    this.playerIcon.y = 400;
+    this.playerIcon.width = 50;
+    this.playerIcon.height = 50;
+
+    this.coplayers = []
+    var xList = [100, 400, 675]
+    var yList = [250, 150, 250]
+    for (var i = 0; i < 3; i++) {
+      this.coplayers[i] = {
+        "text": new PIXI.Text("", Styles.infoStyle),
+        "icon": new PIXI.Sprite(PIXI.Texture.WHITE),
+        "discarded": new PIXI.Text("", Styles.smallStyle)
+      }
+      this.addChild(this.coplayers[i].text);
+      this.coplayers[i].text.anchor.set(0.5);
+      this.coplayers[i].text.x = xList[i];
+      this.coplayers[i].text.y = yList[i];
+
+      this.addChild(this.coplayers[i].discarded);
+      this.coplayers[i].discarded.anchor.set(0.5);
+      this.coplayers[i].discarded.x = xList[i];
+      this.coplayers[i].discarded.y = yList[i]+100;
+
+      this.addChild(this.coplayers[i].icon);
+      this.coplayers[i].icon.x = xList[i];
+      this.coplayers[i].icon.y = yList[i]+50;
+      this.coplayers[i].icon.width = 50;
+      this.coplayers[i].icon.height = 50;
+      this.coplayers[i].icon.anchor.set(0.5);
     }
 
-    this.proposeStarButton = new PIXI.Text('Prop. Star', Styles.buttonStyle);
+    this.proposeStarButton = new PIXI.Text('Star!', Styles.buttonStyle);
     this.addChild(this.proposeStarButton);
-    this.proposeStarButton.x = 50;
-    this.proposeStarButton.y = 450;
+    this.proposeStarButton.x = 400;
+    this.proposeStarButton.y = 550;
 
     this.proposeStarButton.interactive = true;
     this.proposeStarButton.buttonMode = true;
@@ -76,10 +103,10 @@ export class GameUI extends PIXI.Container {
       websocket.send(text);
     }
 
-    const proposeConcentrationButton = new PIXI.Text('Prop. Concentration', Styles.buttonStyle);
+    const proposeConcentrationButton = new PIXI.Text('Concentrate!', Styles.buttonStyle);
     this.addChild(proposeConcentrationButton);
-    proposeConcentrationButton.x = 50;
-    proposeConcentrationButton.y = 400;
+    proposeConcentrationButton.x = 100;
+    proposeConcentrationButton.y = 550;
 
     proposeConcentrationButton.interactive = true;
     proposeConcentrationButton.buttonMode = true;
@@ -98,10 +125,10 @@ export class GameUI extends PIXI.Container {
       websocket.send(text);
     }
 
-    this.playCardButton = new PIXI.Text('Play card', Styles.buttonStyle);
+    this.playCardButton = new PIXI.Text('Play!', Styles.buttonStyle);
     this.addChild(this.playCardButton);
-    this.playCardButton.x = 50;
-    this.playCardButton.y = 500;
+    this.playCardButton.x = 600;
+    this.playCardButton.y = 550;
 
     this.playCardButton.interactive = true;
     this.playCardButton.buttonMode = true;
@@ -165,25 +192,47 @@ export class GameUI extends PIXI.Container {
     this.gameToken = gameState.gameState.gameToken;
 
 
-    this.levelText.text = "Level " + gameState.gameState.cardsOnTable.level;
-    this.livesText.text = "Lives " + gameState.gameState.cardsOnTable.lives;
-    this.starsText.text = "Stars " + gameState.gameState.cardsOnTable.stars;
+    this.levelText.text = "⚑ " + gameState.gameState.cardsOnTable.level;
+    this.livesText.text = "❤ " + gameState.gameState.cardsOnTable.lives;
+    this.starsText.text = "★ " + gameState.gameState.cardsOnTable.stars;
     this.topCardText.text = "TopCard " + gameState.gameState.cardsOnTable.topCard;
-    this.handText.text = "Hand " + gameState.gameState.cardsOfPlayer.cardsInHand;
+    this.handText.text = gameState.gameState.cardsOfPlayer.cardsInHand;
 
-    for (var playerId = 1; playerId <= 4; playerId++) {
-      if (playerId in gameState.gameState.playerNames) {
-        this.playerStateText[playerId].visible = true;
-        this.playerStateText[playerId].text = gameState.gameState.playerNames[playerId];
-        this.playerStateText[playerId].text += " (" + gameState.gameState.cardsOfPlayer.nrCardOfOtherPlayers[playerId] + " cards)";
-
-        this.playerIcons[playerId].visible = true;
-        var iconId = gameState.gameState.playerIconIds[playerId];
-        this.playerIcons[playerId].texture = PIXI.Texture.from(`artefacts/${iconId}.png`);
+    var coplayersIndex = 0;
+    for(const id of Object.keys(gameState.gameState.playerNames)){
+      if (id == gameState.gameState.playerId) {
+        // render player icon
+        this.playerIcon.visible = true;
+        var iconId = gameState.gameState.playerIconId;
+        this.playerIcon.texture = PIXI.Texture.from(`artefacts/${iconId}.png`);
+        // render player's discarded card for star
+        if (id in gameState.gameState.placeCardEvent.discardedCard) {
+          this.discardedText.visible = true;
+          this.discardedText.text = "discard: " + gameState.gameState.placeCardEvent.discardedCard[id];
+        } else {
+          this.discardedText.visible = false;
+        }
       } else {
-        this.playerStateText[playerId].visible = false;
-        this.playerIcons[playerId].visible = false;
+        this.coplayers[coplayersIndex].text.visible = true;
+        this.coplayers[coplayersIndex].text.text = gameState.gameState.playerNames[id];
+        this.coplayers[coplayersIndex].text.text += " (" + gameState.gameState.cardsOfPlayer.nrCardOfOtherPlayers[id] + ")";
+
+        if (id in gameState.gameState.placeCardEvent.discardedCard) {
+          this.coplayers[coplayersIndex].discarded.visible = true;
+          this.coplayers[coplayersIndex].discarded.text = "discard: " + gameState.gameState.placeCardEvent.discardedCard[id];
+        } else {
+          this.coplayers[coplayersIndex].discarded.visible = false;
+        }
+        this.coplayers[coplayersIndex].icon.visible = true;
+        var iconId = gameState.gameState.playerIconIds[id];
+        this.coplayers[coplayersIndex].icon.texture = PIXI.Texture.from(`artefacts/${iconId}.png`);
+        coplayersIndex += 1;
       }
+    };
+    while(coplayersIndex < 3){
+      this.coplayers[coplayersIndex].text.visible = false;
+      this.coplayers[coplayersIndex].discarded.visible = false;
+      this.coplayers[coplayersIndex].icon.visible = false;
     }
 
     this.proposeStarButton.visible = gameState.gameState.cardsOnTable.stars > 0;
@@ -322,6 +371,4 @@ export class GameUI extends PIXI.Container {
     }
 
   }
-
 }
-
