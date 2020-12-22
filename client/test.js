@@ -40,7 +40,8 @@ export class TestUI extends PIXI.Container {
           "gameToken":"049281ac-104f-4e9b-9cc6-e494e61ecea2",
           "playerToken":"135ß098235token",
           "playerName":"Bla",
-          "PlayerId":2,
+          "playerId":2,
+          "playerIconId":2,
           "cardsOfPlayer":{
             "cardsInHand":null,
             "nrCardOfOtherPlayers":null
@@ -69,9 +70,14 @@ export class TestUI extends PIXI.Container {
             "ready": [1]
           },
           "placeCardEvent":{
-            "name":"",
+            "name":"useStar",
             "triggeredBy":0,
-            "discardedCard":null
+            "discardedCard": {
+              "1": [1],
+              "2": [2],
+              "3": [3],
+              "4": [10]
+            }
           },
           "processStarEvent":{
             "name":"",
@@ -98,17 +104,28 @@ export class TestUI extends PIXI.Container {
             "gameToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",
             "playerToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
             "playerName": "bob",
-            "PlayerId": 1,
+            "playerId": 1,
+            "playerIconId": 3,
             "cardsOfPlayer": {
               "cardsInHand": [40, 53, 88],
               "nrCardOfOtherPlayers": {
                 "1": 3,
-                "2": 2
+                "2": 2,
+                "3": 1,
+                "4": 0
               }
             },
             "playerNames": {
               "1": "bob",
-              "2": "alice"
+              "2": "alice",
+              "3": "mark",
+              "4": "nico"
+            },
+            "playerIconIds": {
+              "1": 1,
+              "2": 2,
+              "3": 3,
+              "4": 4
             },
             "cardsOnTable": {
               "topCard": 10,
@@ -130,9 +147,14 @@ export class TestUI extends PIXI.Container {
               "ready": null
             },
             "placeCardEvent": {
-              "name": "",
+              "name": "useStar",
               "triggeredBy": 0,
-              "discardedCard": null
+              "discardedCard": {
+                "1": [1],
+                "2": [2],
+                "3": [3],
+                "4": [10]
+              }
             },
             "processingStarEvent": {
               "name": "",
@@ -160,17 +182,28 @@ export class TestUI extends PIXI.Container {
             "gameToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",
             "playerToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
             "playerName": "bob",
-            "PlayerId": 1,
+            "playerId": 1,
+            "playerIconId": 3,
             "cardsOfPlayer": {
               "cardsInHand": [40, 53, 88],
               "nrCardOfOtherPlayers": {
                 "1": 3,
-                "2": 2
+                "2": 2,
+                "3": 1,
+                "4": 0
               }
             },
             "playerNames": {
               "1": "bob",
-              "2": "alice"
+              "2": "alice",
+              "3": "mark",
+              "4": "nico"
+            },
+            "playerIconIds": {
+              "1": 1,
+              "2": 2,
+              "3": 3,
+              "4": 4
             },
             "cardsOnTable": {
               "topCard": 10,
@@ -194,7 +227,9 @@ export class TestUI extends PIXI.Container {
             "placeCardEvent": {
               "name": "placeCard",
               "triggeredBy": 2,
-              "discardedCard": 42
+              "discardedCard": {
+                "2": [10]
+              }
             },
             "processingStarEvent": {
               "name": "",
@@ -222,17 +257,28 @@ export class TestUI extends PIXI.Container {
             "gameToken": "049281ac-104f-4e9b-9cc6-e494e61ecea2",
             "playerToken": "01w281ac-524f-4w3f-1hh5-i135z71rtre2",
             "playerName": "bob",
-            "PlayerId": 1,
+            "playerId": 1,
+            "playerIconId": 3,
             "cardsOfPlayer": {
               "cardsInHand": [40, 53, 88],
               "nrCardOfOtherPlayers": {
                 "1": 3,
-                "2": 2
+                "2": 2,
+                "3": 1,
+                "4": 0
               }
             },
             "playerNames": {
               "1": "bob",
-              "2": "alice"
+              "2": "alice",
+              "3": "mark",
+              "4": "nico"
+            },
+            "playerIconIds": {
+              "1": 1,
+              "2": 2,
+              "3": 3,
+              "4": 4
             },
             "cardsOnTable": {
               "topCard": 10,
@@ -256,7 +302,12 @@ export class TestUI extends PIXI.Container {
             "placeCardEvent": {
               "name": "",
               "triggeredBy": 2,
-              "discardedCard": null
+              "discardedCard": {
+                "1": [1],
+                "2": [2],
+                "3": [3],
+                "4": [10]
+              }
             },
             "processingStarEvent": {
               "name": "",
