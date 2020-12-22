@@ -220,7 +220,7 @@ export class GameUI extends PIXI.Container {
         this.coplayers[coplayersIndex].text.text = gameState.gameState.playerNames[id];
         this.coplayers[coplayersIndex].text.text += " (" + gameState.gameState.cardsOfPlayer.nrCardOfOtherPlayers[id] + ")";
 
-        if (id in gameState.gameState.placeCardEvent.discardedCard) {
+        if (id in gameState.gameState.placeCardEvent.discardedCard && gameState.gameState.gameStateEvent.name != "levelUp") {
           this.coplayers[coplayersIndex].discarded.visible = true;
           this.coplayers[coplayersIndex].discarded.text = "discard: " + gameState.gameState.placeCardEvent.discardedCard[id];
         } else {
