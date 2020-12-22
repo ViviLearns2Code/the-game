@@ -61,7 +61,7 @@ func changeNamesToBorgsIfNeeded(manager *GameManager, gameState *GameState, isBo
 	if isBorg && manager.CardsOnTable.Level == 7 {
 		str := "of"
 		str += strconv.Itoa(len(gameState.PlayerNames))
-		for playerID, _ := range gameState.PlayerName {
+		for playerID, _ := range gameState.PlayerNames {
 			str1 := strconv.Itoa(playerID)
 			newname := str1 + str
 			gameState.PlayerNames[playerID] = newname
