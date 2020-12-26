@@ -38,7 +38,6 @@ export class ConcentrationUI extends PIXI.Container {
     var self = this;
     readyButton.on('pointerdown', onReadyButtonClick);
     function onReadyButtonClick() {
-      console.debug(self.gameToken)
       var text = JSON.stringify(
         {
           "gameToken": self.gameToken,

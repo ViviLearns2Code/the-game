@@ -123,7 +123,13 @@ export class StarUI extends PIXI.Container {
     this.playerStatesText.text = "";
     for (const [playerId, playerName] of Object.entries(gameState.gameState.playerNames)) {
       this.playerStatesText.text += playerName
-      this.playerStatesText.text += " " + (gameState.gameState.processStarEvent.proStar.includes(parseInt(playerId)) ? "ready" : "not ready")
+      if (gameState.gameState.processStarEvent.proStar.includes(parseInt(playerId))){
+        this.playerStatesText.text += " pro";
+      } else if (gameState.gameState.processStarEvent.conStar.includes(parseInt(playerId))){
+        this.playerStatesText.text += " con";
+      } else {
+        this.playerStatesText.text += " unknown";
+      }
       this.playerStatesText.text += "\n"
     }
 

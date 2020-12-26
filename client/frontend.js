@@ -6,6 +6,7 @@ import { GameUI } from './game.js'
 import { ConcentrationUI } from './concentration.js'
 import { StarUI } from './star.js'
 import { LevelUpUI } from './levelup.js'
+import { LifeLostUI } from './lifelost.js'
 import { TestUI } from './test.js'
 
 WebFont.load({
@@ -48,6 +49,11 @@ function main() {
   levelUpContainer.x = app.renderer.width / 2;
   levelUpContainer.y = app.renderer.height / 2;
 
+  var lifeLostContainer = new LifeLostUI(websocket)
+  app.stage.addChild(lifeLostContainer)
+  lifeLostContainer.x = app.renderer.width / 2;
+  lifeLostContainer.y = app.renderer.height / 2;
+
   //var testContainer = new TestUI(parseGameStateGlobal)
   //app.stage.addChild(testContainer)
 
@@ -59,6 +65,7 @@ function main() {
     concentrationContainer.parseGameState(gameState);
     starContainer.parseGameState(gameState);
     levelUpContainer.parseGameState(gameState);
+    lifeLostContainer.parseGameState(gameState);
     //testContainer.parseGameState(gameState);
 
     if (gameState.errorMsg === "") {

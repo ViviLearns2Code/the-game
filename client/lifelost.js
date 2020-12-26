@@ -1,7 +1,7 @@
 import * as PIXI from './pixi.mjs';
 import { Styles } from './style.js'
 
-export class LevelUpUI extends PIXI.Container {
+export class LifeLostUI extends PIXI.Container {
   constructor(websocket) {
     super()
 
@@ -21,32 +21,31 @@ export class LevelUpUI extends PIXI.Container {
     this.titleText.x = 0;
     this.titleText.y = 0;
 
-    this.perksText = new PIXI.Text('', Styles.infoStyle);
-    this.addChild(this.perksText);
-    this.perksText.x = 0;
-    this.perksText.y = 50;
+    this.detailText = new PIXI.Text('', Styles.infoStyle);
+    this.addChild(this.detailText);
+    this.detailText.x = 0;
+    this.detailText.y = 50;
 
     this.visible = false
   }
 
   parseGameState(gameState) {
 
-    if (!(gameState.gameState?.gameStateEvent?.name === "levelUp"))
+    if (!(gameState.gameState?.gameStateEvent?.livesDecrease))
       return;
 
-    this.titleText.text = gameState.gameState.gameStateEvent.levelTitle;
-    this.perksText.text = "You reached a new level"
-    if (gameState.gameState.gameStateEvent.starsIncrease)
-      this.perksText.text += "\n+1 ★";
-    else if (gameState.gameState.gameStateEvent.livesIncrease)
-      this.perksText.text += "\n+1 ❤";
+    this.titleText.text = "Out of synch!";
+    this.detailText.text = "You lose a life";
+    for (const [playerId, cards] of Object.entries(gameState.gameState.placeCardEvent.discardedCard)){
+      var verb = " has "
+      if(cards.length == 1 && cards[0] == gameState.gameState.cardsOnTable.topCard){
+        verb = " played "
+      }
+      this.detailText.text += "\n" + gameState.gameState.playerNames[playerId] + verb + cards
+    }
 
     const coords = {scale: 0}
     var self = this;
-    var wait = 0
-    if (gameState.gameState?.gameStateEvent?.livesDecrease){
-      wait = 4000
-    }
 
     var tweenShow = new TWEEN.Tween(coords)
       .to({scale: 1}, 750)
@@ -59,10 +58,6 @@ export class LevelUpUI extends PIXI.Container {
         self.visible = true
       })
       .start()
-
-    var tweenWait = new TWEEN.Tween(coords)
-      .to({scale: 1}, wait)
-
     var tweenHide = new TWEEN.Tween(coords)
       .to({scale: 0}, 4000)
       .easing(TWEEN.Easing.Quadratic.In)
@@ -73,10 +68,6 @@ export class LevelUpUI extends PIXI.Container {
       .onComplete(()=>{
         self.visible = false;
       })
-    tweenShow.chain(tweenWait)
-    tweenWait.chain(tweenHide);
-
+      tweenShow.chain(tweenHide);
   }
-
-
 }
