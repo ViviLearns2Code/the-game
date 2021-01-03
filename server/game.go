@@ -61,7 +61,7 @@ func changeNamesToBorgsIfNeeded(manager *GameManager, gameState *GameState, isBo
 	if isBorg && manager.CardsOnTable.Level == 7 {
 		str := "of"
 		str += strconv.Itoa(len(gameState.PlayerNames))
-		for playerID, _ := range gameState.PlayerNames {
+		for playerID := range gameState.PlayerNames {
 			str1 := strconv.Itoa(playerID)
 			newname := str1 + str
 			gameState.PlayerNames[playerID] = newname
@@ -355,9 +355,11 @@ func actIfUsingStar(manager *GameManager, gameState *GameState) {
 	if nrOfPlayer == len(gameState.ProcessStarEvent.ProStar) {
 		smallestCard := 100
 		for playerIdx, cardsInHand := range manager.cardsInHands {
-			manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[:1], cardsInHand[1:]
-			if manager.discardedCards[playerIdx][0] < smallestCard {
-				smallestCard = manager.discardedCards[playerIdx][0]
+			if len(manager.cardsInHands[playerIdx]) != 0 {
+				manager.discardedCards[playerIdx], manager.cardsInHands[playerIdx] = cardsInHand[:1], cardsInHand[1:]
+				if manager.discardedCards[playerIdx][0] < smallestCard {
+					smallestCard = manager.discardedCards[playerIdx][0]
+				}
 			}
 		}
 		gameState.PlaceCardEvent.setPlaceCardEvent("useStar", 0, &manager.discardedCards)
