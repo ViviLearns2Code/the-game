@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"math/rand"
 	"sort"
 	"strconv"
@@ -75,10 +74,6 @@ func NewGame() *Game {
 		subCh:   make(chan subscription, 1),
 		unsubCh: make(chan string, 1),
 	}
-}
-
-func describe(i interface{}) {
-	log.Printf("(%v, %T)\n", i, i)
 }
 
 func (g *Game) Subscribe(playerName string, playerIconId int) (string, chan GameState) {
