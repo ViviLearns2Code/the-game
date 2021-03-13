@@ -64,11 +64,10 @@ type GameManager struct {
 }
 
 type Game struct {
-	token     string
-	inputCh   chan InputDetails
-	publishCh chan bool
-	subCh     chan subscription
-	unsubCh   chan string
+	token   string
+	inputCh chan InputDetails
+	subCh   chan subscription
+	unsubCh chan string
 }
 
 type CardsOnTable struct {

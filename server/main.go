@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"log"
 	"math/rand"
 	"net"
@@ -81,52 +80,6 @@ func removeGameFromMap(gameToken string) {
 	delete(gameMap, gameToken)
 }
 
-var rootTemplate = template.Must(template.New("root").Parse(`
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8" />
-<script>
-	websocket = new WebSocket("ws://{{.}}/socket");
-	var onMessage = function(m){
-		var node = document.createElement("p");
-		var textnode = document.createTextNode(m.data);
-		node.appendChild(textnode);
-		document.getElementById("chat").appendChild(node);
-	}
-	var onClose = function(m){
-		var node = document.createElement("p");
-		var textnode = document.createTextNode("Connection closed: "+m.reason);
-		node.appendChild(textnode);
-		document.getElementById("chat").appendChild(node);
-	}
-	var onSend = function(e){
-		websocket.send(JSON.stringify({
-			"actionId": document.getElementById("action-id").value,
-			"playerName": document.getElementById("player-name").value,
-			"playerToken": document.getElementById("player-token").value,
-			"cardId": document.getElementById("card-id").value,
-			"gameToken": document.getElementById("game-token").value
-		}));
-	}
-	websocket.onmessage = onMessage;
-	websocket.onclose = onClose;
-</script>
-Player Name <input id="player-name"/></br>
-Action Id <input id="action-id"/></br>
-Player Token <input id="player-token"/></br>
-Game Token <input id="game-token"/></br>
-Card Id <input id="card-id"/></br>
-<button onclick="onSend(this)">Send</button>
-<div id="chat"></div>
-</html>
-`))
-
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("main", goid())
-	rootTemplate.Execute(w, listenAddr)
-}
-
 func goid() int {
 	var buf [64]byte
 	n := runtime.Stack(buf[:], false)
@@ -165,11 +118,16 @@ func isValidAction(actionId string) bool {
 }
 
 func main() {
-	log.Printf("hello server")
-	log.Println("main", goid())
-	http.HandleFunc("/", rootHandler)
-	http.Handle("/socket", http.HandlerFunc(runGame))
-	err := http.ListenAndServe(listenAddr, nil)
+	log.Println("starting server")
+	mux := http.NewServeMux()
+	mux.Handle("/socket", http.HandlerFunc(runGame))
+	s := &http.Server{
+		Addr:         listenAddr,
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+	err := s.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -205,7 +163,7 @@ func isValidPlayer(playerToken string, playerTokenPrev string) bool {
 	return (playerToken == playerTokenPrev)
 }
 func validateInput(gameDetails InputDetails, myGame Game, myPlayerToken string, myPlayerName string, myPlayerIconId int) bool {
-	log.Printf("Checking inputs...")
+	log.Println("checking inputs...")
 	var ok = true
 	// universal checks
 	if gameDetails.PlayerName == "" {
@@ -262,18 +220,19 @@ func rollDice() (isBorg bool) {
 }
 
 func runGame(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Connection established...")
+	log.Printf("number of goroutines %d", runtime.NumGoroutine())
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		InsecureSkipVerify: false,
 		OriginPatterns:     []string{gameOrigin},
 	})
+	log.Println("connection established...")
 	if err != nil {
-		log.Printf(err.Error())
+		log.Println(err.Error())
 		return
 	}
 	defer c.Close(websocket.StatusInternalError, "internal error")
 
-	ctx, cancel := context.WithTimeout(r.Context(), time.Hour*120000)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Hour*1)
 	defer cancel()
 
 	var myPlayerToken string
@@ -281,8 +240,13 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 	var myPlayerName string
 	var myGame Game
 	var myPlayerChannel chan GameState
-	log.Printf("Entering loop...")
 	for {
+		select {
+		case <-ctx.Done():
+			c.Close(websocket.StatusInternalError, ctx.Err().Error())
+			return
+		default:
+		}
 		var data = make(map[string]interface{})
 
 		var err = wsjson.Read(ctx, c, &data)
@@ -297,11 +261,11 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 		inputOk := validateInput(gameDetails, myGame, myPlayerToken, myPlayerName, myPlayerIconId)
 		if !inputOk {
 			output := convertGameStateToOutput(newGameState(myGame.token))
-			output.ErrorMsg = "Wrong input"
+			output.ErrorMsg = "wrong input"
 			err = wsjson.Write(ctx, c, output)
 			if err != nil {
 				// when write fails, it is too broken
-				log.Printf(err.Error())
+				log.Println(err.Error())
 				g, ok := getGameFromMap(myGame.token)
 				if ok {
 					g.Unsubscribe(myPlayerToken)
@@ -310,7 +274,6 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 				if ok {
 					g.Unsubscribe(gameDetails.PlayerToken)
 				}
-				log.Println("Input check hahahaha", err.Error())
 				c.Close(websocket.StatusInternalError, err.Error())
 				return
 			}
@@ -318,54 +281,60 @@ func runGame(w http.ResponseWriter, r *http.Request) {
 		}
 		switch gameDetails.ActionId {
 		case "create":
-			log.Printf("Creating game...")
 			isBorg := rollDice()
 			myPlayerName = gameDetails.PlayerName
 			myPlayerIconId = gameDetails.PlayerIconId
 			myGame = *NewGame()
 			addGameToMap(myGame.token, myGame)
 			go myGame.Start(isBorg)
+			log.Printf("game %s is started", myGame.token)
 			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName, myPlayerIconId)
 			gameDetails.PlayerToken = myPlayerToken
 			gameDetails.GameToken = myGame.token
-			go listenPlayerChannel(c, ctx, myPlayerChannel)
+			go listenPlayerChannel(c, ctx, myPlayerChannel, myPlayerToken)
+			log.Printf("player %s registered to game %s", myPlayerToken, myGame.token)
 		case "join":
-			log.Printf("Joining game...")
 			myGame, _ = getGameFromMap(gameDetails.GameToken)
 			myPlayerName = gameDetails.PlayerName
 			myPlayerIconId = gameDetails.PlayerIconId
 			myPlayerToken, myPlayerChannel = myGame.Subscribe(myPlayerName, myPlayerIconId)
 			gameDetails.PlayerToken = myPlayerToken
-			go listenPlayerChannel(c, ctx, myPlayerChannel)
+			go listenPlayerChannel(c, ctx, myPlayerChannel, myPlayerToken)
+			log.Printf("player %s registered to game %s", myPlayerToken, myGame.token)
 		case "leave":
-			log.Printf("Leaving game...")
+			log.Println("leaving game...")
 			myGame, _ := getGameFromMap(gameDetails.GameToken)
 			myGame.Unsubscribe(myPlayerToken)
+			log.Printf("player %s unregistered from game %s", myPlayerToken, myGame.token)
 		default:
-			log.Printf("Action %s", gameDetails.ActionId)
 			myGame.inputCh <- gameDetails
+			log.Printf("player %s submitted action %s", myPlayerToken, gameDetails.ActionId)
 		}
 	}
 }
-func listenPlayerChannel(c *websocket.Conn, ctx context.Context, myPlayerChannel chan GameState) {
+func listenPlayerChannel(c *websocket.Conn, ctx context.Context, myPlayerChannel chan GameState, myPlayerToken string) {
 	var err error
-	log.Printf("%v: Player channel opened...", goid())
+	log.Printf("%d: channel opened for player %s", goid(), myPlayerToken)
 	for {
+		select {
+		case <-ctx.Done():
+			c.Close(websocket.StatusInternalError, ctx.Err().Error())
+			return
+		default:
+		}
 		gameState, ok := <-myPlayerChannel
-		log.Printf("%v: Player channel received something...", goid())
 		if !ok {
-			log.Println("closed!")
+			log.Printf("%d: channel for player %s closed!", goid(), myPlayerToken)
 			return
 		}
-		log.Printf("%v: event name %s", goid(), gameState.GameStateEvent.Name)
-		log.Printf("%v: game token %s", goid(), gameState.GameToken)
+		log.Printf("%d: player %s received game event %s for game %s", goid(), myPlayerToken, gameState.GameStateEvent.Name, gameState.GameToken)
 		if gameState.GameStateEvent.Name == "gameOver" {
-			log.Printf("Game over! Removing game...")
 			removeGameFromMap(gameState.GameToken)
+			log.Printf("game over: removed game %s", gameState.GameToken)
 			output := convertGameStateToOutput(&gameState)
 			err = wsjson.Write(ctx, c, output)
 			if err != nil {
-				log.Printf("Error when writing to player channel %s for game %s", gameState.PlayerToken, gameState.GameToken)
+				log.Printf("error when writing to player channel %s for game %s", gameState.PlayerToken, gameState.GameToken)
 				c.Close(websocket.StatusInternalError, err.Error())
 				return
 			}
@@ -375,23 +344,22 @@ func listenPlayerChannel(c *websocket.Conn, ctx context.Context, myPlayerChannel
 		g, ok := getGameFromMap(gameState.GameToken)
 		if !ok {
 			// should never happen
-			log.Printf("%v: token incorrect", goid())
-			panic("Game returned invalid gameToken - shutting down...")
+			log.Printf("%d: game %s does not exist: panic", goid(), gameState.GameToken)
+			panic("game returned invalid game token: shutting down")
 		}
 		if gameState.err != nil {
 			if gameState.err.severity == "fatal" {
-				log.Println("Fatal game error", gameState.err.Error())
-				g.Unsubscribe(gameState.PlayerToken)
+				log.Printf("%d: fatal error in game %s: %s", goid(), gameState.GameToken, gameState.err.Error())
+				g.Unsubscribe(myPlayerToken)
 				c.Close(websocket.StatusUnsupportedData, err.Error())
 				return
 			}
 		}
-		log.Printf("New game state received")
 		output := convertGameStateToOutput(&gameState)
 		err = wsjson.Write(ctx, c, output)
 		if err != nil {
-			log.Printf("Error when writing to player channel %s for game %s", gameState.PlayerToken, gameState.GameToken)
-			g.Unsubscribe(gameState.PlayerToken)
+			log.Printf("error when writing response for player %s in game %s", myPlayerToken, gameState.GameToken)
+			g.Unsubscribe(myPlayerToken)
 			c.Close(websocket.StatusInternalError, err.Error())
 			return
 		}

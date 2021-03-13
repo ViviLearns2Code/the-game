@@ -23,8 +23,7 @@ func testCardsInHandsAndOnTable(t *testing.T, gameState GameState, nrOfCard int,
 }
 
 func TestUseStar(t *testing.T) {
-	var myGame Game
-	myGame = *NewGame()
+	myGame := *NewGame()
 	go myGame.Start(false)
 
 	var maryInput = &InputDetails{
@@ -143,8 +142,7 @@ func TestUseStar(t *testing.T) {
 
 func TestStart(t *testing.T) {
 
-	var myGame Game
-	myGame = *NewGame()
+	myGame := *NewGame()
 	go myGame.Start(false)
 
 	// mary create room
